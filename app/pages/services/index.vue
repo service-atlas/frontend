@@ -22,24 +22,44 @@ const tabs = [
       ]"
     />
 
-    <UPageSection title="Browse" description="This section will list your services.">
+    <UPageSection
+      title="Browse"
+      description="This section will list your services."
+    >
       <UCard>
         <div class="flex items-center justify-between gap-3">
-          <UInput icon="i-lucide-search" placeholder="Search services..." class="w-full md:w-80" />
+          <UInput
+            icon="i-lucide-search"
+            placeholder="Search services..."
+            class="w-full md:w-80"
+          />
           <div class="flex items-center gap-2">
             <USelect :options="['All', 'Active', 'Archived']" />
-            <UButton icon="i-lucide-filter" label="Filters" color="neutral" variant="ghost" />
+            <UButton
+              icon="i-lucide-filter"
+              label="Filters"
+              color="neutral"
+              variant="ghost"
+            />
           </div>
         </div>
         <div class="mt-4 grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-4">
-          <UCard v-for="n in 6" :key="n">
+          <UCard
+            v-for="n in 6"
+            :key="n"
+          >
             <template #header>
               <div class="flex items-center justify-between">
                 <div class="flex items-center gap-2">
                   <UIcon name="i-lucide-box" />
                   <span class="font-medium">Service {{ n }}</span>
                 </div>
-                <UButton icon="i-lucide-more-horizontal" variant="ghost" color="neutral" aria-label="More" />
+                <UButton
+                  icon="i-lucide-more-horizontal"
+                  variant="ghost"
+                  color="neutral"
+                  aria-label="More"
+                />
               </div>
             </template>
             <p class="text-(--ui-text-muted)">
@@ -47,8 +67,20 @@ const tabs = [
             </p>
             <template #footer>
               <div class="flex items-center gap-2">
-                <UButton size="sm" icon="i-lucide-pencil" color="neutral" variant="subtle" label="Edit" />
-                <UButton size="sm" icon="i-lucide-link-2" color="neutral" variant="ghost" label="Associate" />
+                <UButton
+                  size="sm"
+                  icon="i-lucide-pencil"
+                  color="neutral"
+                  variant="subtle"
+                  label="Edit"
+                />
+                <UButton
+                  size="sm"
+                  icon="i-lucide-link-2"
+                  color="neutral"
+                  variant="ghost"
+                  label="Associate"
+                />
               </div>
             </template>
           </UCard>
@@ -56,7 +88,10 @@ const tabs = [
       </UCard>
     </UPageSection>
 
-    <UPageSection title="Manage" description="Quick actions and details for a selected service (preview only).">
+    <UPageSection
+      title="Manage"
+      description="Quick actions and details for a selected service (preview only)."
+    >
       <UTabs :items="tabs">
         <template #overview>
           <UCard>
@@ -72,7 +107,10 @@ const tabs = [
             </p>
             <div class="mt-3 flex items-center gap-2">
               <USelect :options="['Service A', 'Service B', 'Service C']" />
-              <UButton icon="i-lucide-plus" label="Add Association" />
+              <UButton
+                icon="i-lucide-plus"
+                label="Add Association"
+              />
             </div>
           </UCard>
         </template>
@@ -83,8 +121,14 @@ const tabs = [
             </p>
             <div class="mt-3 flex items-center gap-2">
               <UInput placeholder="Version (e.g., 1.2.3)" />
-              <UInput placeholder="Date" icon="i-lucide-calendar" />
-              <UButton icon="i-lucide-rocket" label="Add Release" />
+              <UInput
+                placeholder="Date"
+                icon="i-lucide-calendar"
+              />
+              <UButton
+                icon="i-lucide-rocket"
+                label="Add Release"
+              />
             </div>
           </UCard>
         </template>
@@ -95,10 +139,19 @@ const tabs = [
             </p>
             <div class="mt-3 grid grid-cols-1 md:grid-cols-2 gap-3">
               <UInput placeholder="Title" />
-              <USelect :options="['Low', 'Medium', 'High']" placeholder="Severity" />
-              <UTextarea placeholder="Description" class="md:col-span-2" />
+              <USelect
+                :options="['Low', 'Medium', 'High']"
+                placeholder="Severity"
+              />
+              <UTextarea
+                placeholder="Description"
+                class="md:col-span-2"
+              />
               <div class="md:col-span-2">
-                <UButton icon="i-lucide-plus" label="Add Debt" />
+                <UButton
+                  icon="i-lucide-plus"
+                  label="Add Debt"
+                />
               </div>
             </div>
           </UCard>

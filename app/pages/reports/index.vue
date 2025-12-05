@@ -18,12 +18,21 @@ const cards = [
       :links="[{ label: 'Refresh', icon: 'i-lucide-rotate-cw', color: 'neutral', variant: 'subtle' }]"
     />
 
-    <UPageSection title="Overview" description="These are initial placeholders. We will wire data sources later.">
+    <UPageSection
+      title="Overview"
+      description="These are initial placeholders. We will wire data sources later."
+    >
       <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
-        <UCard v-for="c in cards" :key="c.title">
+        <UCard
+          v-for="c in cards"
+          :key="c.title"
+        >
           <template #header>
             <div class="flex items-center gap-2">
-              <UIcon :name="c.icon" class="text-(--ui-primary)" />
+              <UIcon
+                :name="c.icon"
+                class="text-(--ui-primary)"
+              />
               <span class="font-medium">{{ c.title }}</span>
             </div>
           </template>
@@ -31,7 +40,12 @@ const cards = [
             {{ c.description }}
           </p>
           <template #footer>
-            <UButton color="neutral" variant="ghost" icon="i-lucide-arrow-right" label="View details" />
+            <UButton
+              color="neutral"
+              variant="ghost"
+              icon="i-lucide-arrow-right"
+              label="View details"
+            />
           </template>
         </UCard>
       </div>

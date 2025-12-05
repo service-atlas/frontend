@@ -14,7 +14,10 @@ definePageMeta({
       ]"
     />
 
-    <UPageSection title="Teams List" description="This will display the list of teams.">
+    <UPageSection
+      title="Teams List"
+      description="This will display the list of teams."
+    >
       <UCard>
         <p class="text-(--ui-text-muted)">
           No teams yet. Create your first team to get started.
