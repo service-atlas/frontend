@@ -5,7 +5,10 @@ const showSidebar = computed(() => route.path !== '/')
 
 <template>
   <div class="min-h-screen flex bg-(--ui-bg)">
-    <div v-if="showSidebar" class="hidden md:block w-64 shrink-0">
+    <div
+      v-if="showSidebar"
+      class="hidden md:block w-64 shrink-0"
+    >
       <AppSidebar />
     </div>
 
