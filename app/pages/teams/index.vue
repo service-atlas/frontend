@@ -68,17 +68,13 @@ async function _handleDelete() {
 
 <template>
   <div>
-    <UPageHero
-      title="Teams"
-      description="Create, list, update and delete teams."
-    />
     <UPageSection
-      title="Manage"
+      title="Manage Teams"
       description="Create new teams and manage existing ones."
     >
       <div class="flex items-center justify-between gap-2 mb-3">
         <UButton
-          icon="i-lucid-plus"
+          icon="i-lucide-plus"
           label="New Team"
           @click="showCreate = true"
         />
@@ -122,7 +118,7 @@ async function _handleDelete() {
               </div>
             </div>
             <div class="flex items-center gap-2">
-              <UButton size="sm" icon="i-lucide-pencil" color="neutral" variant="subtle" label="Edit" @click="openEdit(t)" />
+              <UButton size="sm" icon="i-lucide-pen" color="neutral" variant="subtle" label="Edit" @click="openEdit(t)" />
               <UButton size="sm" icon="i-lucide-trash" color="neutral" variant="ghost" label="Delete" @click="confirmDelete(t.id)" />
             </div>
           </div>
