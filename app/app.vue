@@ -11,7 +11,7 @@ useHead({
   }
 })
 
-const title = 'Nuxt Starter Template'
+const title = 'Service Atlas'
 const description = 'A production-ready starter template powered by Nuxt UI. Build beautiful, accessible, and performant applications in minutes, not hours.'
 
 useSeoMeta({
@@ -40,7 +40,7 @@ useSeoMeta({
         <UColorModeButton />
 
         <UButton
-          to="https://github.com/nuxt-ui-templates/starter"
+          to="https://github.com/service-atlas"
           target="_blank"
           icon="i-simple-icons-github"
           aria-label="GitHub"
