@@ -5,10 +5,6 @@ export default defineNuxtConfig({
     '@nuxt/ui'
   ],
 
-  devtools: {
-    enabled: true
-  },
-
   // Ensure global styles (Tailwind + Nuxt UI) are loaded from the conventional Nuxt assets directory
   css: ['~/assets/css/main.css'],
 
@@ -41,5 +37,8 @@ export default defineNuxtConfig({
         braceStyle: '1tbs'
       }
     }
+  },
+  devtools: {
+    enabled: true
   }
 })

@@ -52,10 +52,12 @@ async function handleUpdate() {
 // Delete confirm state
 const showDelete = ref(false)
 const toDeleteId = ref<string | null>(null)
+
 function confirmDelete(id: string) {
   toDeleteId.value = id
   showDelete.value = true
 }
+
 async function handleDelete() {
   if (!toDeleteId.value) return
   await deleteTeam(toDeleteId.value)
@@ -70,14 +72,11 @@ async function handleDelete() {
       title="Teams"
       description="Create, list, update and delete teams."
     />
-
-
     <UPageSection
       title="Manage"
       description="Create new teams and manage existing ones."
     >
       <div class="flex items-center justify-between gap-2 mb-3">
-
         <!-- Create Modal -->
         <UModal>
           <UButton
@@ -86,25 +85,41 @@ async function handleDelete() {
             @click="showCreate = true"
           />
 
-            <template #content>
-              <UCard>
+          <template #content>
+            <UCard>
               <div class="font-medium">
                 New Team
               </div>
 
-            <div class="space-y-3">
-              <UForm @submit.prevent="handleCreate">
-                <UFormField label="Name" required>
-                  <UInput v-model="createName" placeholder="e.g., Platform" auto-focus />
-                </UFormField>
-                <div class="mt-4 flex justify-end gap-2">
-                  <UButton color="neutral" variant="ghost" label="Cancel" @click="showCreate = false" />
-                  <UButton :disabled="!canCreate" type="submit" label="Create" />
-                </div>
-              </UForm>
-            </div>
-          </UCard>
-            </template>
+              <div class="space-y-3">
+                <UForm @submit.prevent="handleCreate">
+                  <UFormField
+                    label="Name"
+                    required
+                  >
+                    <UInput
+                      v-model="createName"
+                      placeholder="e.g., Platform"
+                      auto-focus
+                    />
+                  </UFormField>
+                  <div class="mt-4 flex justify-end gap-2">
+                    <UButton
+                      color="neutral"
+                      variant="ghost"
+                      label="Cancel"
+                      @click="showCreate = false"
+                    />
+                    <UButton
+                      :disabled="!canCreate"
+                      type="submit"
+                      label="Create"
+                    />
+                  </div>
+                </UForm>
+              </div>
+            </UCard>
+          </template>
         </UModal>
 
         <div class="flex items-center gap-2">
@@ -113,8 +128,8 @@ async function handleDelete() {
             color="neutral"
             variant="ghost"
             :loading="loading"
-            @click="fetchTeams()"
             aria-label="Refresh"
+            @click="fetchTeams()"
           />
         </div>
       </div>
@@ -123,19 +138,31 @@ async function handleDelete() {
         <template #header>
           <div class="flex items-center justify-between">
             <span class="font-medium">Teams</span>
-            <span v-if="loading" class="text-(--ui-text-muted) text-sm">Loading…</span>
+            <span
+              v-if="loading"
+              class="text-(--ui-text-muted) text-sm"
+            >Loading…</span>
           </div>
         </template>
 
-        <div v-if="error" class="text-red-600 text-sm mb-2">
+        <div
+          v-if="error"
+          class="text-red-600 text-sm mb-2"
+        >
           {{ error }}
         </div>
 
-        <div v-if="!loading && teams.length === 0" class="text-(--ui-text-muted)">
+        <div
+          v-if="!loading && teams.length === 0"
+          class="text-(--ui-text-muted)"
+        >
           No teams yet. Create your first team to get started.
         </div>
 
-        <div v-else class="flex flex-col divide-y">
+        <div
+          v-else
+          class="flex flex-col divide-y"
+        >
           <div
             v-for="t in teams"
             :key="t.id"
@@ -172,8 +199,6 @@ async function handleDelete() {
       </UCard>
     </UPageSection>
 
-
-
     <!-- Edit Modal -->
     <UModal v-model="showEdit">
       <UCard>
@@ -182,14 +207,29 @@ async function handleDelete() {
             Edit Team
           </div>
         </template>
-        <div class="space-y-3" v-if="editModel">
+        <div
+          v-if="editModel"
+          class="space-y-3"
+        >
           <UForm @submit.prevent="handleUpdate">
-            <UFormField label="Name" required>
+            <UFormField
+              label="Name"
+              required
+            >
               <UInput v-model="editModel.name" />
             </UFormField>
             <div class="mt-4 flex justify-end gap-2">
-              <UButton color="neutral" variant="ghost" label="Cancel" @click="showEdit = false" />
-              <UButton :disabled="!canUpdate" type="submit" label="Save" />
+              <UButton
+                color="neutral"
+                variant="ghost"
+                label="Cancel"
+                @click="showEdit = false"
+              />
+              <UButton
+                :disabled="!canUpdate"
+                type="submit"
+                label="Save"
+              />
             </div>
           </UForm>
         </div>
@@ -208,8 +248,18 @@ async function handleDelete() {
           Are you sure you want to delete this team? This action cannot be undone.
         </p>
         <div class="mt-4 flex justify-end gap-2">
-          <UButton color="neutral" variant="ghost" label="Cancel" @click="showDelete = false" />
-          <UButton color="red" icon="i-lucide-trash" label="Delete" @click="handleDelete" />
+          <UButton
+            color="neutral"
+            variant="ghost"
+            label="Cancel"
+            @click="showDelete = false"
+          />
+          <UButton
+            color="red"
+            icon="i-lucide-trash"
+            label="Delete"
+            @click="handleDelete"
+          />
         </div>
       </UCard>
     </UModal>
