@@ -71,5 +71,7 @@ useSeoMeta({
         />
       </template>
     </UFooter>
+
+    <!-- Nuxt UI v4 no longer requires a global <UModals /> provider -->
   </UApp>
 </template>

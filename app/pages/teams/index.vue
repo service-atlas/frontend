@@ -71,16 +71,42 @@ async function handleDelete() {
       description="Create, list, update and delete teams."
     />
 
+
     <UPageSection
       title="Manage"
       description="Create new teams and manage existing ones."
     >
       <div class="flex items-center justify-between gap-2 mb-3">
-        <UButton
-          icon="i-lucide-plus"
-          label="New Team"
-          @click="showCreate = true"
-        />
+
+        <!-- Create Modal -->
+        <UModal>
+          <UButton
+            icon="i-lucid-plus"
+            label="New Team"
+            @click="showCreate = true"
+          />
+
+            <template #content>
+              <UCard>
+              <div class="font-medium">
+                New Team
+              </div>
+
+            <div class="space-y-3">
+              <UForm @submit.prevent="handleCreate">
+                <UFormField label="Name" required>
+                  <UInput v-model="createName" placeholder="e.g., Platform" auto-focus />
+                </UFormField>
+                <div class="mt-4 flex justify-end gap-2">
+                  <UButton color="neutral" variant="ghost" label="Cancel" @click="showCreate = false" />
+                  <UButton :disabled="!canCreate" type="submit" label="Create" />
+                </div>
+              </UForm>
+            </div>
+          </UCard>
+            </template>
+        </UModal>
+
         <div class="flex items-center gap-2">
           <UButton
             icon="i-lucide-rotate-cw"
@@ -146,27 +172,7 @@ async function handleDelete() {
       </UCard>
     </UPageSection>
 
-    <!-- Create Modal -->
-    <UModal v-model="showCreate">
-      <UCard>
-        <template #header>
-          <div class="font-medium">
-            New Team
-          </div>
-        </template>
-        <div class="space-y-3">
-          <UForm @submit.prevent="handleCreate">
-            <UFormGroup label="Name" required>
-              <UInput v-model="createName" placeholder="e.g., Platform" auto-focus />
-            </UFormGroup>
-            <div class="mt-4 flex justify-end gap-2">
-              <UButton color="neutral" variant="ghost" label="Cancel" @click="showCreate = false" />
-              <UButton :disabled="!canCreate" type="submit" label="Create" />
-            </div>
-          </UForm>
-        </div>
-      </UCard>
-    </UModal>
+
 
     <!-- Edit Modal -->
     <UModal v-model="showEdit">
@@ -178,9 +184,9 @@ async function handleDelete() {
         </template>
         <div class="space-y-3" v-if="editModel">
           <UForm @submit.prevent="handleUpdate">
-            <UFormGroup label="Name" required>
+            <UFormField label="Name" required>
               <UInput v-model="editModel.name" />
-            </UFormGroup>
+            </UFormField>
             <div class="mt-4 flex justify-end gap-2">
               <UButton color="neutral" variant="ghost" label="Cancel" @click="showEdit = false" />
               <UButton :disabled="!canUpdate" type="submit" label="Save" />

@@ -9,6 +9,7 @@ export default defineNuxtConfig({
     enabled: true
   },
 
+  // Ensure global styles (Tailwind + Nuxt UI) are loaded from the conventional Nuxt assets directory
   css: ['~/assets/css/main.css'],
 
   routeRules: {},
