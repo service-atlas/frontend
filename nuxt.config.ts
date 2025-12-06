@@ -4,20 +4,23 @@ export default defineNuxtConfig({
     '@nuxt/eslint',
     '@nuxt/ui'
   ],
+  devtools: {
+    enabled: true
+  },
 
   // Ensure global styles (Tailwind + Nuxt UI) are loaded from the conventional Nuxt assets directory
   css: ['~/assets/css/main.css'],
 
-  routeRules: {},
-
-  compatibilityDate: '2025-01-15',
-
   runtimeConfig: {
     public: {
       // Base URL for backend API
-      apiUrl: process.env.API_URL || ''
+      apiUrl: process.env.API_URL || 'http://localhost:8080'
     }
   },
+
+  routeRules: {},
+
+  compatibilityDate: '2025-01-15',
 
   // In development, proxy API requests to avoid CORS issues.
   // Requests made to "/api/*" from the browser will be proxied to API_URL.
@@ -37,8 +40,5 @@ export default defineNuxtConfig({
         braceStyle: '1tbs'
       }
     }
-  },
-  devtools: {
-    enabled: true
   }
 })
