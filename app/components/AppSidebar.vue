@@ -2,17 +2,17 @@
 const links = [
   {
     label: 'Reports',
-    icon: 'i-lucide-bar-chart-3',
+    icon: 'lucide:bar-chart-3',
     to: '/reports'
   },
   {
     label: 'Teams',
-    icon: 'i-lucide-users',
+    icon: 'lucide:users',
     to: '/teams'
   },
   {
     label: 'Services',
-    icon: 'i-lucide-box',
+    icon: 'lucide:box',
     to: '/services'
   }
 ]

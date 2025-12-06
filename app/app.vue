@@ -1,3 +1,4 @@
+
 <script setup>
 useHead({
   meta: [
@@ -39,7 +40,7 @@ useSeoMeta({
         <UButton
           to="https://github.com/service-atlas"
           target="_blank"
-          icon="i-simple-icons-github"
+          icon="simple-icons:github"
           aria-label="GitHub"
           color="neutral"
           variant="ghost"
@@ -51,7 +52,7 @@ useSeoMeta({
       <NuxtPage />
     </UMain>
 
-    <USeparator icon="i-simple-icons-nuxtdotjs" />
+    <USeparator icon="simple-icons:nuxtdotjs" />
 
     <UFooter>
       <template #left>
@@ -64,7 +65,7 @@ useSeoMeta({
         <UButton
           to="https://github.com/nuxt-ui-templates/starter"
           target="_blank"
-          icon="i-simple-icons-github"
+          icon="simple-icons:github"
           aria-label="GitHub"
           color="neutral"
           variant="ghost"

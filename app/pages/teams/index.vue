@@ -74,14 +74,14 @@ async function _handleDelete() {
     >
       <div class="flex items-center justify-between gap-2 mb-3">
         <UButton
-          icon="i-lucide-plus"
+          icon="lucide:plus"
           label="New Team"
           @click="showCreate = true"
         />
 
         <div class="flex items-center gap-2">
           <UButton
-            icon="i-lucide-rotate-cw"
+            icon="lucide:rotate-cw"
             color="neutral"
             variant="ghost"
             :loading="loading"
@@ -118,8 +118,8 @@ async function _handleDelete() {
               </div>
             </div>
             <div class="flex items-center gap-2">
-              <UButton size="sm" icon="i-lucide-pen" color="neutral" variant="subtle" label="Edit" @click="openEdit(t)" />
-              <UButton size="sm" icon="i-lucide-trash" color="neutral" variant="ghost" label="Delete" @click="confirmDelete(t.id)" />
+              <UButton size="sm" icon="lucide:pen" color="neutral" variant="subtle" label="Edit" @click="openEdit(t)" />
+              <UButton size="sm" icon="lucide:trash" color="neutral" variant="ghost" label="Delete" @click="confirmDelete(t.id)" />
             </div>
           </div>
         </div>
@@ -152,7 +152,7 @@ async function _handleDelete() {
           @click="showCreate = false"
         />
         <UButton
-          icon="i-lucide-plus"
+          icon="lucide:plus"
           :disabled="!canCreate || loading"
           label="Create"
           @click="_handleCreate"
@@ -186,7 +186,7 @@ async function _handleDelete() {
           @click="showEdit = false"
         />
         <UButton
-          icon="i-lucide-save"
+          icon="lucide:save"
           :disabled="!canUpdate || loading"
           label="Save"
           @click="_handleUpdate"
@@ -219,7 +219,7 @@ async function _handleDelete() {
         />
         <UButton
           color="red"
-          icon="i-lucide-trash"
+          icon="lucide:trash"
           :disabled="loading"
           label="Delete"
           @click="_handleDelete"

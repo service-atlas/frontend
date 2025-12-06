@@ -3,9 +3,9 @@
     v-slot="{ open }"
     :modal="false"
     :items="[
-      { label: 'Reports', icon: 'i-lucide-bar-chart-3', to: '/reports' },
-      { label: 'Teams', icon: 'i-lucide-users', to: '/teams' },
-      { label: 'Services', icon: 'i-lucide-box', to: '/services' }
+      { label: 'Reports', icon: 'lucide:bar-chart-3', to: '/reports' },
+      { label: 'Teams', icon: 'lucide:users', to: '/teams' },
+      { label: 'Services', icon: 'lucide:box', to: '/services' }
     ]"
     :content="{ align: 'start' }"
     :ui="{ content: 'min-w-fit' }"
@@ -14,7 +14,7 @@
     <UButton
       label="Pages"
       variant="subtle"
-      trailing-icon="i-lucide-chevron-down"
+      trailing-icon="lucide:chevron-down"
       size="xs"
       class="-mb-[6px] font-semibold rounded-full truncate"
       :class="[open && 'bg-primary/15']"
