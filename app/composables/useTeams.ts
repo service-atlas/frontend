@@ -43,7 +43,7 @@ export function useTeams() {
     await fetchTeams()
   }
 
-  async function updateTeam(payload: { id: string; name: string }) {
+  async function updateTeam(payload: { id: string, name: string }) {
     await client(`/teams/${payload.id}`, { method: 'PUT', body: payload })
     await fetchTeams()
   }
