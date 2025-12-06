@@ -11,21 +11,21 @@ definePageMeta({
         <UButton
           to="/reports"
           size="xl"
-          icon="i-lucide-bar-chart-3"
+          icon="lucide:bar-chart-3"
           label="Reports"
           block
         />
         <UButton
           to="/teams"
           size="xl"
-          icon="i-lucide-users"
+          icon="lucide:users"
           label="Teams"
           block
         />
         <UButton
           to="/services"
           size="xl"
-          icon="i-lucide-box"
+          icon="lucide:box"
           label="Services"
           block
         />

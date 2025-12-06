@@ -4,9 +4,9 @@ definePageMeta({
 })
 
 const cards = [
-  { title: 'Service Health', icon: 'i-lucide-heart-pulse', description: 'Overview of the current health across all services.' },
-  { title: 'Upcoming Releases', icon: 'i-lucide-rocket', description: 'Releases scheduled in the next 30 days.' },
-  { title: 'Outstanding Debt', icon: 'i-lucide-alert-triangle', description: 'Open tech debt items grouped by service.' }
+  { title: 'Service Health', icon: 'lucide:heart-pulse', description: 'Overview of the current health across all services.' },
+  { title: 'Upcoming Releases', icon: 'lucide:rocket', description: 'Releases scheduled in the next 30 days.' },
+  { title: 'Outstanding Debt', icon: 'lucide:alert-triangle', description: 'Open tech debt items grouped by service.' }
 ]
 </script>
 
@@ -15,7 +15,7 @@ const cards = [
     <UPageHero
       title="Reports"
       description="A high-level view across services: health, releases, and technical debt."
-      :links="[{ label: 'Refresh', icon: 'i-lucide-rotate-cw', color: 'neutral', variant: 'subtle' }]"
+      :links="[{ label: 'Refresh', icon: 'lucide:rotate-cw', color: 'neutral', variant: 'subtle' }]"
     />
 
     <UPageSection
@@ -43,7 +43,7 @@ const cards = [
             <UButton
               color="neutral"
               variant="ghost"
-              icon="i-lucide-arrow-right"
+              icon="lucide:arrow-right"
               label="View details"
             />
           </template>
