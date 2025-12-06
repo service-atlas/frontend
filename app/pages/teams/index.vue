@@ -159,5 +159,72 @@ async function _handleDelete() {
         />
       </template>
     </UModal>
+
+    <!-- Edit Modal: simple form in modal body (no UCard) -->
+    <UModal v-model:open="showEdit">
+      <template #header>
+        Edit Team
+      </template>
+      <template #body>
+        <UForm v-if="editModel" @submit.prevent="_handleUpdate">
+          <UFormGroup label="Team name">
+            <UInput
+              v-model="editModel.name"
+              autofocus
+              placeholder="Update team name"
+              @keyup.enter="_handleUpdate"
+            />
+          </UFormGroup>
+        </UForm>
+      </template>
+
+      <template #footer>
+        <UButton
+          color="neutral"
+          variant="ghost"
+          label="Cancel"
+          @click="showEdit = false"
+        />
+        <UButton
+          icon="i-lucide-save"
+          :disabled="!canUpdate || loading"
+          label="Save"
+          @click="_handleUpdate"
+        />
+      </template>
+    </UModal>
+
+    <!-- Delete Modal: simple confirm text and actions (no UCard) -->
+    <UModal v-model:open="showDelete">
+      <template #header>
+        Delete Team
+      </template>
+      <template #body>
+        <div class="space-y-2">
+          <p>
+            Are you sure you want to delete this team?
+          </p>
+          <p class="text-(--ui-text-muted) text-sm">
+            This action cannot be undone.
+          </p>
+        </div>
+      </template>
+
+      <template #footer>
+        <UButton
+          color="neutral"
+          variant="ghost"
+          label="Cancel"
+          @click="showDelete = false"
+        />
+        <UButton
+          color="red"
+          icon="i-lucide-trash"
+          :disabled="loading"
+          label="Delete"
+          @click="_handleDelete"
+        />
+      </template>
+    </UModal>
   </div>
 </template>
