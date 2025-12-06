@@ -95,20 +95,36 @@ async function _handleDelete() {
         <template #header>
           <div class="flex items-center justify-between">
             <span class="font-medium">Teams</span>
-            <span v-if="loading" class="text-(--ui-text-muted) text-sm">Loading…</span>
+            <span
+              v-if="loading"
+              class="text-(--ui-text-muted) text-sm"
+            >Loading…</span>
           </div>
         </template>
 
-        <div v-if="error" class="text-red-600 text-sm mb-2">
+        <div
+          v-if="error"
+          class="text-red-600 text-sm mb-2"
+        >
           {{ error }}
         </div>
 
-        <div v-if="!loading && teams.length === 0" class="text-(--ui-text-muted)">
+        <div
+          v-if="!loading && teams.length === 0"
+          class="text-(--ui-text-muted)"
+        >
           No teams yet. Create your first team to get started.
         </div>
 
-        <div v-else class="flex flex-col divide-y">
-          <div v-for="t in teams" :key="t.id" class="py-3 flex items-center justify-between gap-3">
+        <div
+          v-else
+          class="flex flex-col divide-y"
+        >
+          <div
+            v-for="t in teams"
+            :key="t.id"
+            class="py-3 flex items-center justify-between gap-3"
+          >
             <div class="min-w-0">
               <div class="font-medium truncate">
                 {{ t.name }}
@@ -118,8 +134,22 @@ async function _handleDelete() {
               </div>
             </div>
             <div class="flex items-center gap-2">
-              <UButton size="sm" icon="lucide:pen" color="neutral" variant="subtle" label="Edit" @click="openEdit(t)" />
-              <UButton size="sm" icon="lucide:trash" color="neutral" variant="ghost" label="Delete" @click="confirmDelete(t.id)" />
+              <UButton
+                size="sm"
+                icon="lucide:pen"
+                color="neutral"
+                variant="subtle"
+                label="Edit"
+                @click="openEdit(t)"
+              />
+              <UButton
+                size="sm"
+                icon="lucide:trash"
+                color="neutral"
+                variant="ghost"
+                label="Delete"
+                @click="confirmDelete(t.id)"
+              />
             </div>
           </div>
         </div>
@@ -166,7 +196,10 @@ async function _handleDelete() {
         Edit Team
       </template>
       <template #body>
-        <UForm v-if="editModel" @submit.prevent="_handleUpdate">
+        <UForm
+          v-if="editModel"
+          @submit.prevent="_handleUpdate"
+        >
           <UFormGroup label="Team name">
             <UInput
               v-model="editModel.name"
