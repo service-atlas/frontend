@@ -25,8 +25,8 @@ export function useTeams() {
     try {
       const data = await client<TeamDto[]>('/teams?page=1&pageSize=100', { method: 'GET' })
       teams.value = Array.isArray(data) ? data : []
-    } catch (e: any) {
-      error.value = e?.message ?? 'Failed to load teams'
+    } catch (e: unknown) {
+      error.value = e instanceof Error ? e.message : 'Failed to load teams'
       throw e
     } finally {
       loading.value = false
