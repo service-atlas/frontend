@@ -60,9 +60,14 @@ function confirmDelete(id: string) {
 
 async function _handleDelete() {
   if (!toDeleteId.value) return
-  await deleteTeam(toDeleteId.value)
-  toDeleteId.value = null
-  showDelete.value = false
+
+  try {
+    await deleteTeam(toDeleteId.value)
+    toDeleteId.value = null
+    showDelete.value = false
+  } catch {
+    throw new Error('Failed to delete team.')
+  }
 }
 </script>
 
