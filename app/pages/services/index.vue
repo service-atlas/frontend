@@ -4,10 +4,10 @@ definePageMeta({
 })
 
 const tabs = [
-  { label: 'Overview', icon: 'i-lucide-list-tree', slot: 'overview' },
-  { label: 'Associations', icon: 'i-lucide-git-merge', slot: 'associations' },
-  { label: 'Releases', icon: 'i-lucide-rocket', slot: 'releases' },
-  { label: 'Debt', icon: 'i-lucide-alert-triangle', slot: 'debt' }
+  { label: 'Overview', icon: 'lucide:list-tree', slot: 'overview' },
+  { label: 'Associations', icon: 'lucide:git-merge', slot: 'associations' },
+  { label: 'Releases', icon: 'lucide:rocket', slot: 'releases' },
+  { label: 'Debt', icon: 'lucide:alert-triangle', slot: 'debt' }
 ]
 </script>
 
@@ -17,8 +17,8 @@ const tabs = [
       title="Services"
       description="Create, update, and organize services. Link services, add releases, and track technical debt."
       :links="[
-        { label: 'New Service', icon: 'i-lucide-plus', color: 'primary' },
-        { label: 'Import', icon: 'i-lucide-upload', color: 'neutral', variant: 'subtle' }
+        { label: 'New Service', icon: 'lucide:plus', color: 'primary' },
+        { label: 'Import', icon: 'lucide:upload', color: 'neutral', variant: 'subtle' }
       ]"
     />
 
@@ -29,14 +29,14 @@ const tabs = [
       <UCard>
         <div class="flex items-center justify-between gap-3">
           <UInput
-            icon="i-lucide-search"
+            icon="lucide:search"
             placeholder="Search services..."
             class="w-full md:w-80"
           />
           <div class="flex items-center gap-2">
             <USelect :options="['All', 'Active', 'Archived']" />
             <UButton
-              icon="i-lucide-filter"
+              icon="lucide:filter"
               label="Filters"
               color="neutral"
               variant="ghost"
@@ -51,11 +51,11 @@ const tabs = [
             <template #header>
               <div class="flex items-center justify-between">
                 <div class="flex items-center gap-2">
-                  <UIcon name="i-lucide-box" />
+                  <UIcon name="lucide:box" />
                   <span class="font-medium">Service {{ n }}</span>
                 </div>
                 <UButton
-                  icon="i-lucide-more-horizontal"
+                  icon="lucide:more-horizontal"
                   variant="ghost"
                   color="neutral"
                   aria-label="More"
@@ -69,14 +69,14 @@ const tabs = [
               <div class="flex items-center gap-2">
                 <UButton
                   size="sm"
-                  icon="i-lucide-pencil"
+                  icon="lucide:pencil"
                   color="neutral"
                   variant="subtle"
                   label="Edit"
                 />
                 <UButton
                   size="sm"
-                  icon="i-lucide-link-2"
+                  icon="lucide:link-2"
                   color="neutral"
                   variant="ghost"
                   label="Associate"
@@ -108,7 +108,7 @@ const tabs = [
             <div class="mt-3 flex items-center gap-2">
               <USelect :options="['Service A', 'Service B', 'Service C']" />
               <UButton
-                icon="i-lucide-plus"
+                icon="lucide:plus"
                 label="Add Association"
               />
             </div>
@@ -123,10 +123,10 @@ const tabs = [
               <UInput placeholder="Version (e.g., 1.2.3)" />
               <UInput
                 placeholder="Date"
-                icon="i-lucide-calendar"
+                icon="lucide:calendar"
               />
               <UButton
-                icon="i-lucide-rocket"
+                icon="lucide:rocket"
                 label="Add Release"
               />
             </div>
@@ -149,7 +149,7 @@ const tabs = [
               />
               <div class="md:col-span-2">
                 <UButton
-                  icon="i-lucide-plus"
+                  icon="lucide:plus"
                   label="Add Debt"
                 />
               </div>
