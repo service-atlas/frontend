@@ -251,7 +251,7 @@ async function _handleDelete() {
           @click="showDelete = false"
         />
         <UButton
-          color="red"
+          color="warning"
           icon="lucide:trash"
           :disabled="loading"
           label="Delete"
