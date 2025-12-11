@@ -1,5 +1,6 @@
 <script setup lang="ts">
-import { ref as _ref, onMounted, computed } from 'vue'
+import { ref as _ref, onMounted, computed, watch } from 'vue'
+import type { ServiceDto } from '~/composables/useServices'
 import { useServices } from '~/composables/useServices'
 
 definePageMeta({
@@ -11,6 +12,7 @@ const {
   loading,
   error,
   fetchServices,
+  searchServices,
   createService,
   deleteService
 } = useServices()
@@ -53,6 +55,42 @@ async function _handleCreate() {
   showCreate.value = false
 }
 
+// Search state
+const searchQuery = _ref('')
+const searchResults = _ref<ServiceDto[]>([])
+const hasQuery = computed(() => searchQuery.value.trim().length > 0)
+const displayedServices = computed(() => hasQuery.value ? searchResults.value : services.value)
+
+async function runSearch(q: string) {
+  const query = q.trim()
+  if (!query) {
+    searchResults.value = []
+    return
+  }
+  try {
+    const data = await searchServices(query)
+    searchResults.value = data
+  } catch {
+    // error reactive state is handled in composable; keep prior results on error
+  }
+}
+
+let _searchTimer: ReturnType<typeof setTimeout> | null = null
+watch(searchQuery, (q) => {
+  if (_searchTimer) clearTimeout(_searchTimer)
+  _searchTimer = setTimeout(() => {
+    runSearch(q)
+  }, 300)
+})
+
+function refresh() {
+  if (hasQuery.value) {
+    runSearch(searchQuery.value)
+  } else {
+    fetchServices()
+  }
+}
+
 // Delete confirm state
 const showDelete = _ref(false)
 const toDeleteId = _ref<string | null>(null)
@@ -88,13 +126,26 @@ async function _handleDelete() {
         />
 
         <div class="flex items-center gap-2">
+          <UInput
+            v-model="searchQuery"
+            placeholder="Search services…"
+            icon="lucide:search"
+          />
+          <UButton
+            v-if="hasQuery"
+            color="neutral"
+            variant="ghost"
+            icon="lucide:x"
+            aria-label="Clear search"
+            @click="searchQuery = ''"
+          />
           <UButton
             icon="lucide:rotate-cw"
             color="neutral"
             variant="ghost"
             :loading="loading"
             aria-label="Refresh"
-            @click="fetchServices()"
+            @click="refresh()"
           />
         </div>
       </div>
@@ -118,10 +169,15 @@ async function _handleDelete() {
         </div>
 
         <div
-          v-if="!loading && services.length === 0"
+          v-if="!loading && displayedServices.length === 0"
           class="text-(--ui-text-muted)"
         >
-          No services yet. Create your first service to get started.
+          <template v-if="hasQuery">
+            No results found.
+          </template>
+          <template v-else>
+            No services yet. Create your first service to get started.
+          </template>
         </div>
 
         <div
@@ -129,7 +185,7 @@ async function _handleDelete() {
           class="flex flex-col divide-y"
         >
           <div
-            v-for="s in services"
+            v-for="s in displayedServices"
             :key="s.id"
             class="py-3 flex items-center justify-between gap-3"
           >
@@ -145,7 +201,7 @@ async function _handleDelete() {
                   v-if="s.type"
                   color="neutral"
                   variant="subtle"
-                  size="xs"
+                  size="sm"
                 >
                   {{ s.type }}
                 </UBadge>
@@ -245,7 +301,7 @@ async function _handleDelete() {
         />
         <UButton
           icon="lucide:trash"
-          color="red"
+          color="warning"
           :loading="loading"
           label="Delete"
           @click="_handleDelete"

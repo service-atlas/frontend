@@ -36,6 +36,20 @@ export function useServices() {
     return await client<ServiceDto>(`/services/${id}`, { method: 'GET' })
   }
 
+  async function searchServices(query: string) {
+    loading.value = true
+    error.value = null
+    try {
+      const data = await client<ServiceDto[]>(`/services/search?query=${encodeURIComponent(query)}`, { method: 'GET' })
+      return Array.isArray(data) ? data : []
+    } catch (e: unknown) {
+      error.value = e instanceof Error ? e.message : 'Failed to search services'
+      throw e
+    } finally {
+      loading.value = false
+    }
+  }
+
   async function createService(payload: { name: string; type?: string }) {
     await client('/services', { method: 'POST', body: payload })
     await fetchServices()
@@ -57,6 +71,7 @@ export function useServices() {
     error,
     fetchServices,
     getService,
+    searchServices,
     createService,
     updateService,
     deleteService
