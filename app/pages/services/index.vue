@@ -1,162 +1,256 @@
 <script setup lang="ts">
+import { ref as _ref, onMounted, computed } from 'vue'
+import { useServices } from '~/composables/useServices'
+
 definePageMeta({
   title: 'Services'
 })
 
-const tabs = [
-  { label: 'Overview', icon: 'lucide:list-tree', slot: 'overview' },
-  { label: 'Associations', icon: 'lucide:git-merge', slot: 'associations' },
-  { label: 'Releases', icon: 'lucide:rocket', slot: 'releases' },
-  { label: 'Debt', icon: 'lucide:alert-triangle', slot: 'debt' }
-]
+const {
+  services,
+  loading,
+  error,
+  fetchServices,
+  createService,
+  deleteService
+} = useServices()
+
+onMounted(() => {
+  fetchServices()
+})
+
+// Create modal state
+const showCreate = _ref(false)
+const createName = _ref('')
+const createType = _ref('')
+const canCreate = computed(() => createName.value.trim().length > 0)
+
+// Type suggestions based on existing data
+const existingTypes = computed(() => {
+  const set = new Set<string>()
+  for (const s of services.value) {
+    if (s.type && s.type.trim().length > 0) set.add(s.type.trim())
+  }
+  return Array.from(set).sort((a, b) => a.localeCompare(b))
+})
+
+const filteredTypes = computed(() => {
+  const q = createType.value.trim().toLowerCase()
+  if (!q) return existingTypes.value
+  return existingTypes.value.filter(t => t.toLowerCase().includes(q))
+})
+const showTypeSuggestions = _ref(false)
+
+async function _handleCreate() {
+  if (!canCreate.value) return
+  const payload: { name: string, type?: string } = { name: createName.value.trim() }
+  const t = createType.value.trim()
+  if (t) payload.type = t
+  await createService(payload)
+  createName.value = ''
+  createType.value = ''
+  showTypeSuggestions.value = false
+  showCreate.value = false
+}
+
+// Delete confirm state
+const showDelete = _ref(false)
+const toDeleteId = _ref<string | null>(null)
+
+function confirmDelete(id: string) {
+  toDeleteId.value = id
+  showDelete.value = true
+}
+
+async function _handleDelete() {
+  if (!toDeleteId.value) return
+  try {
+    await deleteService(toDeleteId.value)
+    toDeleteId.value = null
+    showDelete.value = false
+  } catch {
+    throw new Error('Failed to delete service.')
+  }
+}
 </script>
 
 <template>
   <div>
-    <UPageHero
-      title="Services"
-      description="Create, update, and organize services. Link services, add releases, and track technical debt."
-      :links="[
-        { label: 'New Service', icon: 'lucide:plus', color: 'primary' },
-        { label: 'Import', icon: 'lucide:upload', color: 'neutral', variant: 'subtle' }
-      ]"
-    />
-
     <UPageSection
-      title="Browse"
-      description="This section will list your services."
+      title="Manage Services"
+      description="Create new services and manage existing ones."
     >
-      <UCard>
-        <div class="flex items-center justify-between gap-3">
-          <UInput
-            icon="lucide:search"
-            placeholder="Search services..."
-            class="w-full md:w-80"
+      <div class="flex items-center justify-between gap-2 mb-3">
+        <UButton
+          icon="lucide:plus"
+          label="New Service"
+          @click="showCreate = true"
+        />
+
+        <div class="flex items-center gap-2">
+          <UButton
+            icon="lucide:rotate-cw"
+            color="neutral"
+            variant="ghost"
+            :loading="loading"
+            aria-label="Refresh"
+            @click="fetchServices()"
           />
-          <div class="flex items-center gap-2">
-            <USelect :options="['All', 'Active', 'Archived']" />
-            <UButton
-              icon="lucide:filter"
-              label="Filters"
-              color="neutral"
-              variant="ghost"
-            />
-          </div>
         </div>
-        <div class="mt-4 grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-4">
-          <UCard
-            v-for="n in 6"
-            :key="n"
+      </div>
+
+      <UCard>
+        <template #header>
+          <div class="flex items-center justify-between">
+            <span class="font-medium">Services</span>
+            <span
+              v-if="loading"
+              class="text-(--ui-text-muted) text-sm"
+            >Loading…</span>
+          </div>
+        </template>
+
+        <div
+          v-if="error"
+          class="text-red-600 text-sm mb-2"
+        >
+          {{ error }}
+        </div>
+
+        <div
+          v-if="!loading && services.length === 0"
+          class="text-(--ui-text-muted)"
+        >
+          No services yet. Create your first service to get started.
+        </div>
+
+        <div
+          v-else
+          class="flex flex-col divide-y"
+        >
+          <div
+            v-for="s in services"
+            :key="s.id"
+            class="py-3 flex items-center justify-between gap-3"
           >
-            <template #header>
-              <div class="flex items-center justify-between">
-                <div class="flex items-center gap-2">
-                  <UIcon name="lucide:box" />
-                  <span class="font-medium">Service {{ n }}</span>
-                </div>
-                <UButton
-                  icon="lucide:more-horizontal"
-                  variant="ghost"
-                  color="neutral"
-                  aria-label="More"
-                />
-              </div>
-            </template>
-            <p class="text-(--ui-text-muted)">
-              Placeholder description about this service. Click to view details.
-            </p>
-            <template #footer>
-              <div class="flex items-center gap-2">
-                <UButton
-                  size="sm"
-                  icon="lucide:pencil"
+            <div class="min-w-0">
+              <NuxtLink
+                class="font-medium truncate hover:underline"
+                :to="`/service/${s.id}`"
+              >
+                {{ s.name }}
+              </NuxtLink>
+              <div class="mt-0.5">
+                <UBadge
+                  v-if="s.type"
                   color="neutral"
                   variant="subtle"
-                  label="Edit"
-                />
-                <UButton
-                  size="sm"
-                  icon="lucide:link-2"
-                  color="neutral"
-                  variant="ghost"
-                  label="Associate"
-                />
+                  size="xs"
+                >
+                  {{ s.type }}
+                </UBadge>
               </div>
-            </template>
-          </UCard>
+              <div class="text-(--ui-text-muted) text-xs">
+                <span v-if="s.updated">Updated: {{ new Date(s.updated).toLocaleString() }}</span>
+                <span v-else-if="s.created">Created: {{ new Date(s.created).toLocaleString() }}</span>
+              </div>
+            </div>
+            <div class="flex items-center gap-2">
+              <UButton
+                size="sm"
+                icon="lucide:trash"
+                color="neutral"
+                variant="ghost"
+                label="Delete"
+                @click="confirmDelete(s.id)"
+              />
+            </div>
+          </div>
         </div>
       </UCard>
     </UPageSection>
 
-    <UPageSection
-      title="Manage"
-      description="Quick actions and details for a selected service (preview only)."
-    >
-      <UTabs :items="tabs">
-        <template #overview>
-          <UCard>
-            <p class="text-(--ui-text-muted)">
-              Overview details for the selected service will appear here.
-            </p>
-          </UCard>
-        </template>
-        <template #associations>
-          <UCard>
-            <p class="text-(--ui-text-muted)">
-              Define dependencies and relationships between services.
-            </p>
-            <div class="mt-3 flex items-center gap-2">
-              <USelect :options="['Service A', 'Service B', 'Service C']" />
-              <UButton
-                icon="lucide:plus"
-                label="Add Association"
-              />
-            </div>
-          </UCard>
-        </template>
-        <template #releases>
-          <UCard>
-            <p class="text-(--ui-text-muted)">
-              Add and view releases for this service.
-            </p>
-            <div class="mt-3 flex items-center gap-2">
-              <UInput placeholder="Version (e.g., 1.2.3)" />
+    <!-- Create Modal -->
+    <UModal v-model:open="showCreate">
+      <template #header>
+        Create Service
+      </template>
+      <template #body>
+        <UForm @submit.prevent="_handleCreate" class="space-y-4">
+          <UFormField label="Service name">
+            <UInput
+              v-model="createName"
+              autofocus
+              placeholder="e.g. Payments API"
+              style="margin-bottom: 0.5rem !important;"
+              @keyup.enter="_handleCreate"
+            />
+          </UFormField>
+          <UFormField label="Service type" description="Pick an existing type or enter a new one">
+            <div>
               <UInput
-                placeholder="Date"
-                icon="lucide:calendar"
+                v-model="createType"
+                placeholder="e.g. API, Web, Worker"
+                @focus="showTypeSuggestions = true"
+                @blur="setTimeout(() => showTypeSuggestions = false, 150)"
               />
-              <UButton
-                icon="lucide:rocket"
-                label="Add Release"
-              />
-            </div>
-          </UCard>
-        </template>
-        <template #debt>
-          <UCard>
-            <p class="text-(--ui-text-muted)">
-              Track technical debt items and their status.
-            </p>
-            <div class="mt-3 grid grid-cols-1 md:grid-cols-2 gap-3">
-              <UInput placeholder="Title" />
-              <USelect
-                :options="['Low', 'Medium', 'High']"
-                placeholder="Severity"
-              />
-              <UTextarea
-                placeholder="Description"
-                class="md:col-span-2"
-              />
-              <div class="md:col-span-2">
-                <UButton
-                  icon="lucide:plus"
-                  label="Add Debt"
-                />
+              <div
+                v-if="showTypeSuggestions && filteredTypes.length > 0"
+                class="mt-1 w-full rounded-md border border-(--ui-border) bg-(--ui-bg-elevated) shadow-lg max-h-56 overflow-auto"
+              >
+                <button
+                  v-for="t in filteredTypes"
+                  :key="t"
+                  type="button"
+                  class="w-full text-left px-3 py-2 hover:bg-(--ui-bg-muted) text-sm"
+                  @mousedown.prevent="createType = t; showTypeSuggestions = false"
+                >
+                  {{ t }}
+                </button>
               </div>
             </div>
-          </UCard>
-        </template>
-      </UTabs>
-    </UPageSection>
+          </UFormField>
+        </UForm>
+      </template>
+      <template #footer>
+        <UButton
+          color="neutral"
+          variant="ghost"
+          label="Cancel"
+          @click="showCreate = false"
+        />
+        <UButton
+          icon="lucide:plus"
+          :disabled="!canCreate || loading"
+          label="Create"
+          @click="_handleCreate"
+        />
+      </template>
+    </UModal>
+
+    <!-- Delete Modal -->
+    <UModal v-model:open="showDelete">
+      <template #header>
+        Delete Service
+      </template>
+      <template #body>
+        Are you sure you want to delete this service?
+      </template>
+      <template #footer>
+        <UButton
+          color="neutral"
+          variant="ghost"
+          label="Cancel"
+          @click="showDelete = false"
+        />
+        <UButton
+          icon="lucide:trash"
+          color="red"
+          :loading="loading"
+          label="Delete"
+          @click="_handleDelete"
+        />
+      </template>
+    </UModal>
   </div>
 </template>
