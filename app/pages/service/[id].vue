@@ -67,9 +67,9 @@ async function addTeam() {
   if (!serviceId.value || !selectedTeamId.value) return
   try {
     loading.value = true
-    await client(`/services/${serviceId.value}/teams`, {
-      method: 'POST',
-      body: { teamId: selectedTeamId.value }
+    // Backend expects PUT /teams/:teamId/services/:serviceId
+    await client(`/teams/${selectedTeamId.value}/services/${serviceId.value}`, {
+      method: 'PUT'
     })
     selectedTeamId.value = null
     await fetchAssignedTeams()
