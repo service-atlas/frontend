@@ -2,6 +2,7 @@
 import { ref as _ref, computed, onMounted } from 'vue'
 import { useRoute } from 'vue-router'
 import { useServices } from '~/composables/useServices'
+import type { ServiceDto as ServiceItemDto } from '~/composables/useServices'
 import { useTeams } from '~/composables/useTeams'
 import type { TeamDto } from '~/composables/useTeams'
 import { useDebt } from '~/composables/useDebt'
@@ -14,7 +15,7 @@ definePageMeta({
 const route = useRoute()
 const serviceId = computed(() => String(route.params.id || ''))
 
-const { getService } = useServices()
+const { getService, services, fetchServices } = useServices()
 const { teams, fetchTeams } = useTeams()
 const debt = useDebt()
 
@@ -25,6 +26,12 @@ const baseURL = (import.meta.dev ? '/api' : (config.public?.apiUrl as string) ||
 const client = $fetch.create({ baseURL })
 
 type ServiceDto = Awaited<ReturnType<typeof getService>>
+
+type DependencyDto = {
+  id: string
+  name?: string
+  version?: string | null
+}
 
 const service = _ref<ServiceDto | null>(null)
 const loading = _ref(false)
@@ -41,6 +48,26 @@ const unassignedTeams = computed(() => {
   return teams.value.filter(t => !assignedIds.has(t.id))
 })
 
+// Dependencies state
+const dependencies = _ref<DependencyDto[]>([])
+const showAddDependency = _ref(false)
+const selectedDependencyId = _ref<string | null>(null)
+const selectedDependencyVersion = _ref<string>('')
+
+const dependentIds = computed(() => new Set(dependencies.value.map(d => d.id)))
+const availableDependencyOptions = computed(() => {
+  const currentId = serviceId.value
+  return (services.value || [])
+    .filter(s => s.id !== currentId && !dependentIds.value.has(s.id))
+    .map(s => ({ label: s.name, value: s.id }))
+})
+
+const serviceById = computed(() => {
+  const map = new Map<string, ServiceItemDto>()
+  for (const s of services.value || []) map.set(s.id, s)
+  return map
+})
+
 async function loadAll() {
   if (!serviceId.value) return
   loading.value = true
@@ -51,7 +78,9 @@ async function loadAll() {
       getService(serviceId.value),
       fetchTeams().catch(() => undefined),
       fetchAssignedTeams().catch(() => undefined),
-      debt.listDebt(serviceId.value).catch(() => undefined)
+      debt.listDebt(serviceId.value).catch(() => undefined),
+      fetchDependencies().catch(() => undefined),
+      fetchServices().catch(() => undefined)
     ])
     service.value = svc
   } catch (e: unknown) {
@@ -65,6 +94,47 @@ async function fetchAssignedTeams() {
   if (!serviceId.value) return
   const data = await client<TeamDto[]>(`/services/${serviceId.value}/teams`, { method: 'GET' })
   assigned.value = Array.isArray(data) ? data : []
+}
+
+async function fetchDependencies() {
+  if (!serviceId.value) return
+  const data = await client<DependencyDto[]>(`/services/${serviceId.value}/dependencies`, { method: 'GET' })
+  dependencies.value = Array.isArray(data) ? data : []
+}
+
+async function addDependency() {
+  if (!serviceId.value || !selectedDependencyId.value) return
+  try {
+    loading.value = true
+    await client(`/services/${serviceId.value}/dependency`, {
+      method: 'POST',
+      body: {
+        id: selectedDependencyId.value,
+        version: selectedDependencyVersion.value.trim() || undefined
+      }
+    })
+    selectedDependencyId.value = null
+    selectedDependencyVersion.value = ''
+    showAddDependency.value = false
+    await fetchDependencies()
+  } catch (e: unknown) {
+    error.value = e instanceof Error ? e.message : 'Failed to add dependency.'
+  } finally {
+    loading.value = false
+  }
+}
+
+async function removeDependency(targetId: string) {
+  if (!serviceId.value) return
+  try {
+    loading.value = true
+    await client(`/services/${serviceId.value}/dependency/${targetId}`, { method: 'DELETE' })
+    await fetchDependencies()
+  } catch (e: unknown) {
+    error.value = e instanceof Error ? e.message : 'Failed to remove dependency.'
+  } finally {
+    loading.value = false
+  }
 }
 
 async function addTeam() {
@@ -396,8 +466,69 @@ onMounted(() => {
               Dependencies
             </div>
           </template>
-          <div class="text-(--ui-text-muted) text-sm">
-            Placeholder — will be implemented next.
+          <div>
+            <div class="flex items-center justify-between mb-3">
+              <p class="text-(--ui-text-muted) text-sm">
+                Services this service depends on.
+              </p>
+              <UButton
+                icon="lucide:plus"
+                label="Add dependency"
+                :disabled="loading"
+                @click="showAddDependency = true"
+              />
+            </div>
+
+            <p v-if="loading && dependencies.length === 0" class="text-(--ui-text-muted) text-sm">
+              Loading dependencies…
+            </p>
+
+            <div v-else>
+              <p v-if="dependencies.length === 0" class="text-(--ui-text-muted) text-sm">
+                No dependencies yet.
+              </p>
+              <div v-else class="space-y-2">
+                <div
+                  v-for="dep in dependencies"
+                  :key="dep.id"
+                  class="flex items-center justify-between gap-3 p-3 rounded-md border border-(--ui-border) bg-(--ui-bg-elevated)"
+                >
+                  <div class="min-w-0">
+                    <div class="flex items-center gap-2">
+                      <span class="font-medium truncate">
+                        {{ serviceById.get(dep.id)?.name || dep.name || dep.id }}
+                      </span>
+                      <span v-if="dep.version" class="px-2 py-0.5 rounded-md text-xs bg-(--ui-bg-muted)">
+                        v{{ dep.version }}
+                      </span>
+                    </div>
+                    <div class="text-xs text-(--ui-text-muted) font-mono truncate">
+                      {{ dep.id }}
+                    </div>
+                  </div>
+                  <div class="shrink-0">
+                    <UButton
+                      size="xs"
+                      color="neutral"
+                      variant="ghost"
+                      icon="lucide:trash"
+                      aria-label="Remove dependency"
+                      :disabled="loading"
+                      @click="removeDependency(dep.id)"
+                    />
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <UAlert
+              v-if="error"
+              color="error"
+              variant="subtle"
+              class="mt-3"
+            >
+              {{ error }}
+            </UAlert>
           </div>
         </UCard>
       </div>
@@ -440,6 +571,42 @@ onMounted(() => {
           :loading="loading"
           label="Remove"
           @click="_handleConfirmRemove"
+        />
+      </template>
+    </UModal>
+    <!-- Add Dependency Modal -->
+    <UModal v-model:open="showAddDependency">
+      <template #header>
+        Add Dependency
+      </template>
+      <template #body>
+        <UForm>
+          <UFormField label="Service" required>
+            <USelect
+              v-model="selectedDependencyId"
+              :items="availableDependencyOptions"
+              placeholder="Select a service…"
+              class="min-w-[260px]"
+            />
+          </UFormField>
+          <UFormField label="Version" description="Optional">
+            <UInput v-model="selectedDependencyVersion" placeholder="e.g. 1.5.0 (optional)" />
+          </UFormField>
+        </UForm>
+      </template>
+      <template #footer>
+        <UButton
+          color="neutral"
+          variant="ghost"
+          label="Cancel"
+          @click="showAddDependency = false"
+        />
+        <UButton
+          icon="lucide:plus"
+          :disabled="!selectedDependencyId || loading"
+          :loading="loading"
+          label="Add"
+          @click="addDependency"
         />
       </template>
     </UModal>
