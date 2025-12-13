@@ -3,8 +3,8 @@ import { ref } from 'vue'
 export interface DebtItemDto {
   id: string
   title: string
-  type?: string
-  status: 'Open' | 'In Progress' | 'Resolved'
+  type?: 'code' | 'documentation' | 'testing' | 'architecture' | 'infrastructure' | 'security'
+  status: 'pending' | 'in_progress' | 'remediated'
   description?: string
   created?: string
   updated?: string
@@ -59,13 +59,21 @@ export function useDebt() {
     }
   }
 
-  async function createDebt(serviceId: string, payload: { title: string; type?: string; description?: string; status?: DebtItemDto['status'] }) {
+  async function createDebt(
+    serviceId: string,
+    payload: {
+      title: string
+      type?: DebtItemDto['type']
+      description?: string
+      status?: DebtItemDto['status']
+    }
+  ) {
     await client(`/services/${serviceId}/debt`, { method: 'POST', body: payload })
     await listDebt(serviceId)
   }
 
   async function updateDebtStatus(serviceId: string, debtId: string, status: DebtItemDto['status']) {
-    await client(`/services/${serviceId}/debt/${debtId}/status`, { method: 'PATCH', body: { status } })
+    await client(`/debt/${debtId}`, { method: 'PATCH', body: { status } })
     await listDebt(serviceId)
   }
 

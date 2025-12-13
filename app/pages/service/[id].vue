@@ -121,14 +121,23 @@ async function _handleConfirmRemove() {
 // Debt: create modal state and helpers
 const showCreateDebt = _ref(false)
 const newDebtTitle = _ref('')
-const newDebtType = _ref('')
+const newDebtType = _ref<DebtItemDto['type'] | null>(null)
 const newDebtDescription = _ref('')
-const newDebtStatus = _ref<DebtItemDto['status']>('Open')
+const newDebtStatus = _ref<DebtItemDto['status']>('pending')
 
 const debtStatusItems = [
-  { label: 'Open', value: 'Open' },
-  { label: 'In Progress', value: 'In Progress' },
-  { label: 'Resolved', value: 'Resolved' }
+  { label: 'Pending', value: 'pending' },
+  { label: 'In progress', value: 'in_progress' },
+  { label: 'Remediated', value: 'remediated' }
+]
+
+const debtTypeItems = [
+  { label: 'Code', value: 'code' },
+  { label: 'Documentation', value: 'documentation' },
+  { label: 'Testing', value: 'testing' },
+  { label: 'Architecture', value: 'architecture' },
+  { label: 'Infrastructure', value: 'infrastructure' },
+  { label: 'Security', value: 'security' }
 ]
 
 const canCreateDebt = computed(() => newDebtTitle.value.trim().length > 0)
@@ -139,15 +148,15 @@ async function handleCreateDebt() {
     loading.value = true
     await debt.createDebt(serviceId.value, {
       title: newDebtTitle.value.trim(),
-      type: newDebtType.value.trim() || undefined,
+      type: newDebtType.value || undefined,
       description: newDebtDescription.value.trim() || undefined,
       status: newDebtStatus.value
     })
     showCreateDebt.value = false
     newDebtTitle.value = ''
-    newDebtType.value = ''
+    newDebtType.value = null
     newDebtDescription.value = ''
-    newDebtStatus.value = 'Open'
+    newDebtStatus.value = 'pending'
   } catch {
     // error surfaced via debt.error
   } finally {
@@ -354,8 +363,8 @@ onMounted(() => {
               <UFormField label="Title" required>
                 <UInput v-model="newDebtTitle" placeholder="e.g. Replace legacy library" />
               </UFormField>
-              <UFormField label="Type" description="Categorize the debt (e.g. Security, Performance)">
-                <UInput v-model="newDebtType" placeholder="e.g. Security" />
+              <UFormField label="Type" description="Categorize the debt">
+                <USelect v-model="newDebtType" :items="debtTypeItems" class="min-w-[200px]" />
               </UFormField>
               <UFormField label="Status">
                 <USelect v-model="newDebtStatus" :items="debtStatusItems" class="min-w-[200px]" />
