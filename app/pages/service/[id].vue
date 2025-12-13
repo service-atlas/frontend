@@ -188,6 +188,25 @@ async function _handleConfirmRemove() {
   }
 }
 
+// Dependencies: confirm remove modal state and helpers
+const showRemoveDepConfirm = _ref(false)
+const depToRemove = _ref<DependencyDto | null>(null)
+
+function openRemoveDepConfirm(dep: DependencyDto) {
+  depToRemove.value = dep
+  showRemoveDepConfirm.value = true
+}
+
+async function _handleConfirmRemoveDep() {
+  if (!depToRemove.value) return
+  try {
+    await removeDependency(depToRemove.value.id)
+  } finally {
+    showRemoveDepConfirm.value = false
+    depToRemove.value = null
+  }
+}
+
 // Debt: create modal state and helpers
 const showCreateDebt = _ref(false)
 const newDebtTitle = _ref('')
@@ -515,7 +534,7 @@ onMounted(() => {
                       label="Remove"
                       aria-label="Remove dependency"
                       :disabled="loading"
-                      @click="removeDependency(dep.id)"
+                      @click="openRemoveDepConfirm(dep)"
                     />
                   </div>
                 </div>
@@ -572,6 +591,36 @@ onMounted(() => {
           :loading="loading"
           label="Remove"
           @click="_handleConfirmRemove"
+        />
+      </template>
+    </UModal>
+    <!-- Confirm remove dependency modal -->
+    <UModal v-model:open="showRemoveDepConfirm">
+      <template #header>
+        Remove Dependency
+      </template>
+      <template #body>
+        <div>
+          Are you sure you want to remove dependency
+          <span class="font-medium">
+            {{ serviceById.get(depToRemove?.id || '')?.name || depToRemove?.name || depToRemove?.id }}
+          </span>
+          from this service?
+        </div>
+      </template>
+      <template #footer>
+        <UButton
+          color="neutral"
+          variant="ghost"
+          label="Cancel"
+          @click="showRemoveDepConfirm = false"
+        />
+        <UButton
+          icon="lucide:trash"
+          color="warning"
+          :loading="loading"
+          label="Remove"
+          @click="_handleConfirmRemoveDep"
         />
       </template>
     </UModal>
