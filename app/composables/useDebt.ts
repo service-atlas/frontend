@@ -1,0 +1,80 @@
+import { ref } from 'vue'
+
+export interface DebtItemDto {
+  id: string
+  title: string
+  type?: string
+  status: 'Open' | 'In Progress' | 'Resolved'
+  description?: string
+  created?: string
+  updated?: string
+}
+
+export function useDebt() {
+  const config = useRuntimeConfig()
+  const baseURL = (import.meta.dev ? '/api' : (config.public?.apiUrl as string) || '/api')
+  const client = $fetch.create({ baseURL })
+
+  const items = ref<DebtItemDto[]>([])
+  const loading = ref(false)
+  const error = ref<string | null>(null)
+
+  async function listDebt(serviceId: string) {
+    loading.value = true
+    error.value = null
+    try {
+      const data = await client<DebtItemDto[]>(`/services/${serviceId}/debt`, { method: 'GET' })
+      items.value = Array.isArray(data) ? data : []
+    } catch (e: unknown) {
+      // Treat no-debt responses as empty, not errors. Some backends return 404/204 or custom 4xx.
+      const anyErr = e as any
+      const status = anyErr?.statusCode
+        ?? anyErr?.status
+        ?? anyErr?.response?.status
+        ?? anyErr?.data?.statusCode
+        ?? anyErr?.data?.status
+
+      const message: string | undefined = anyErr?.statusMessage
+        ?? anyErr?.data?.message
+        ?? anyErr?.message
+
+      const code: string | undefined = anyErr?.data?.code || anyErr?.code
+
+      const isNoDebt = (
+        status === 404
+        || status === 204
+        || code === 'DEBT_NOT_FOUND'
+        || (typeof message === 'string' && /no\s+debt|not\s+found/i.test(message))
+      )
+
+      if (isNoDebt) {
+        items.value = []
+        error.value = null
+        return
+      }
+      error.value = e instanceof Error ? e.message : 'Failed to load debt items'
+      throw e
+    } finally {
+      loading.value = false
+    }
+  }
+
+  async function createDebt(serviceId: string, payload: { title: string; type?: string; description?: string; status?: DebtItemDto['status'] }) {
+    await client(`/services/${serviceId}/debt`, { method: 'POST', body: payload })
+    await listDebt(serviceId)
+  }
+
+  async function updateDebtStatus(serviceId: string, debtId: string, status: DebtItemDto['status']) {
+    await client(`/services/${serviceId}/debt/${debtId}/status`, { method: 'PATCH', body: { status } })
+    await listDebt(serviceId)
+  }
+
+  return {
+    items,
+    loading,
+    error,
+    listDebt,
+    createDebt,
+    updateDebtStatus
+  }
+}

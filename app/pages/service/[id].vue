@@ -4,6 +4,8 @@ import { useRoute } from 'vue-router'
 import { useServices } from '~/composables/useServices'
 import { useTeams } from '~/composables/useTeams'
 import type { TeamDto } from '~/composables/useTeams'
+import { useDebt } from '~/composables/useDebt'
+import type { DebtItemDto } from '~/composables/useDebt'
 
 definePageMeta({
   title: 'Service'
@@ -14,6 +16,7 @@ const serviceId = computed(() => String(route.params.id || ''))
 
 const { getService } = useServices()
 const { teams, fetchTeams } = useTeams()
+const debt = useDebt()
 
 const config = useRuntimeConfig()
 // In development, route through Nuxt dev proxy at /api to avoid CORS.
@@ -47,7 +50,8 @@ async function loadAll() {
     const [svc] = await Promise.all([
       getService(serviceId.value),
       fetchTeams().catch(() => undefined),
-      fetchAssignedTeams().catch(() => undefined)
+      fetchAssignedTeams().catch(() => undefined),
+      debt.listDebt(serviceId.value).catch(() => undefined)
     ])
     service.value = svc
   } catch (e: unknown) {
@@ -111,6 +115,52 @@ async function _handleConfirmRemove() {
     // Always close modal, error (if any) is shown in alert area
     showRemoveConfirm.value = false
     teamToRemove.value = null
+  }
+}
+
+// Debt: create modal state and helpers
+const showCreateDebt = _ref(false)
+const newDebtTitle = _ref('')
+const newDebtType = _ref('')
+const newDebtDescription = _ref('')
+const newDebtStatus = _ref<DebtItemDto['status']>('Open')
+
+const debtStatusItems = [
+  { label: 'Open', value: 'Open' },
+  { label: 'In Progress', value: 'In Progress' },
+  { label: 'Resolved', value: 'Resolved' }
+]
+
+const canCreateDebt = computed(() => newDebtTitle.value.trim().length > 0)
+
+async function handleCreateDebt() {
+  if (!serviceId.value || !canCreateDebt.value) return
+  try {
+    loading.value = true
+    await debt.createDebt(serviceId.value, {
+      title: newDebtTitle.value.trim(),
+      type: newDebtType.value.trim() || undefined,
+      description: newDebtDescription.value.trim() || undefined,
+      status: newDebtStatus.value
+    })
+    showCreateDebt.value = false
+    newDebtTitle.value = ''
+    newDebtType.value = ''
+    newDebtDescription.value = ''
+    newDebtStatus.value = 'Open'
+  } catch {
+    // error surfaced via debt.error
+  } finally {
+    loading.value = false
+  }
+}
+
+async function handleUpdateDebtStatus(item: DebtItemDto, status: DebtItemDto['status']) {
+  if (!serviceId.value) return
+  try {
+    await debt.updateDebtStatus(serviceId.value, item.id, status)
+  } catch {
+    // error surfaced via debt.error
   }
 }
 
@@ -237,10 +287,100 @@ onMounted(() => {
               Debt
             </div>
           </template>
-          <div class="text-(--ui-text-muted) text-sm">
-            Placeholder — will be implemented next.
+          <div>
+            <div class="flex items-center justify-between mb-3">
+              <p class="text-(--ui-text-muted) text-sm">
+                Track technical debt items for this service.
+              </p>
+              <UButton
+                icon="lucide:plus"
+                label="New"
+                :disabled="loading"
+                @click="showCreateDebt = true"
+              />
+            </div>
+            <p v-if="debt.loading.value === true" class="text-(--ui-text-muted) text-sm">
+              Loading debts…
+            </p>
+            <div v-else>
+              <p v-if="debt.items.value.length === 0" class="text-(--ui-text-muted) text-sm">
+                No debts to display.
+              </p>
+              <div v-else class="space-y-2">
+                <div
+                  v-for="d in debt.items.value"
+                  :key="d.id"
+                  class="flex items-start justify-between gap-3 p-3 rounded-md border border-(--ui-border) bg-(--ui-bg-elevated)"
+                >
+                  <div class="min-w-0">
+                    <div class="flex items-center gap-2">
+                      <span class="font-medium truncate">{{ d.title }}</span>
+                      <span v-if="d.type" class="px-2 py-0.5 rounded-md text-xs bg-(--ui-bg-muted)">{{ d.type }}</span>
+                    </div>
+                    <p v-if="d.description" class="text-sm text-(--ui-text-muted) truncate max-w-[480px]">
+                      {{ d.description }}
+                    </p>
+                  </div>
+                  <div class="flex items-center gap-2 shrink-0">
+                    <USelect
+                      :items="debtStatusItems"
+                      :model-value="d.status"
+                      class="min-w-[150px]"
+                      @update:model-value="(v) => handleUpdateDebtStatus(d, v as DebtItemDto['status'])"
+                    />
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <UAlert
+              v-if="debt.error && debt.items.length > 0"
+              color="error"
+              variant="subtle"
+              class="mt-3"
+            >
+              {{ debt.error }}
+            </UAlert>
           </div>
         </UCard>
+
+        <!-- Create Debt Modal -->
+        <UModal v-model:open="showCreateDebt">
+          <template #header>
+            New Debt Item
+          </template>
+          <template #body>
+            <UForm>
+              <UFormField label="Title" required>
+                <UInput v-model="newDebtTitle" placeholder="e.g. Replace legacy library" />
+              </UFormField>
+              <UFormField label="Type" description="Categorize the debt (e.g. Security, Performance)">
+                <UInput v-model="newDebtType" placeholder="e.g. Security" />
+              </UFormField>
+              <UFormField label="Status">
+                <USelect v-model="newDebtStatus" :items="debtStatusItems" class="min-w-[200px]" />
+              </UFormField>
+              <UFormField label="Description">
+                <UTextarea v-model="newDebtDescription" placeholder="Add more details…" />
+              </UFormField>
+            </UForm>
+          </template>
+          <template #footer>
+            <UButton
+              color="neutral"
+              variant="ghost"
+              label="Cancel"
+              @click="showCreateDebt = false"
+            />
+            <UButton
+              icon="lucide:plus"
+              :disabled="!canCreateDebt || loading"
+              :loading="loading"
+              label="Create"
+              @click="handleCreateDebt"
+            />
+          </template>
+        </UModal>
         <UCard>
           <template #header>
             <div class="font-medium">
