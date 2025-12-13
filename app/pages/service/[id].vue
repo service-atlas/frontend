@@ -7,6 +7,7 @@ import { useTeams } from '~/composables/useTeams'
 import type { TeamDto } from '~/composables/useTeams'
 import { useDebt } from '~/composables/useDebt'
 import type { DebtItemDto } from '~/composables/useDebt'
+import { useReleases } from '~/composables/useReleases'
 
 definePageMeta({
   title: 'Service'
@@ -18,6 +19,7 @@ const serviceId = computed(() => String(route.params.id || ''))
 const { getService, services, fetchServices } = useServices()
 const { teams, fetchTeams } = useTeams()
 const debt = useDebt()
+const releases = useReleases()
 
 const config = useRuntimeConfig()
 // In development, route through Nuxt dev proxy at /api to avoid CORS.
@@ -31,6 +33,12 @@ type DependencyDto = {
   id: string
   name?: string
   version?: string | null
+}
+
+type ReleaseCreatePayload = {
+  url?: string
+  version?: string
+  release_date?: string
 }
 
 const service = _ref<ServiceDto | null>(null)
@@ -53,6 +61,15 @@ const dependencies = _ref<DependencyDto[]>([])
 const showAddDependency = _ref(false)
 const selectedDependencyId = _ref<string | null>(null)
 const selectedDependencyVersion = _ref<string>('')
+
+// Releases state
+const showAddRelease = _ref(false)
+const newReleaseUrl = _ref('')
+const newReleaseVersion = _ref('')
+// We capture a local datetime string ('YYYY-MM-DDTHH:mm') and convert to UTC ISO if provided
+const newReleaseDateLocal = _ref('')
+const releaseFormError = _ref<string | null>(null)
+const creatingRelease = _ref(false)
 
 const dependentIds = computed(() => new Set(dependencies.value.map(d => d.id)))
 const availableDependencyOptions = computed(() => {
@@ -80,7 +97,8 @@ async function loadAll() {
       fetchAssignedTeams().catch(() => undefined),
       debt.listDebt(serviceId.value).catch(() => undefined),
       fetchDependencies().catch(() => undefined),
-      fetchServices().catch(() => undefined)
+      fetchServices().catch(() => undefined),
+      releases.listReleases(serviceId.value).catch(() => undefined)
     ])
     service.value = svc
   } catch (e: unknown) {
@@ -94,6 +112,56 @@ async function fetchAssignedTeams() {
   if (!serviceId.value) return
   const data = await client<TeamDto[]>(`/services/${serviceId.value}/teams`, { method: 'GET' })
   assigned.value = Array.isArray(data) ? data : []
+}
+
+function openAddRelease() {
+  releaseFormError.value = null
+  newReleaseUrl.value = ''
+  newReleaseVersion.value = ''
+  newReleaseDateLocal.value = ''
+  showAddRelease.value = true
+}
+
+function toUtcIso(local: string): string | undefined {
+  if (!local) return undefined
+  // local is like '2025-05-15T14:30'
+  const dt = new Date(local)
+  if (Number.isNaN(dt.getTime())) return undefined
+  return dt.toISOString()
+}
+
+function formatUtc(iso?: string): string {
+  if (!iso) return ''
+  try {
+    const d = new Date(iso)
+    if (Number.isNaN(d.getTime())) return ''
+    return d.toISOString().replace('T', ' ').replace('Z', 'Z')
+  } catch {
+    return ''
+  }
+}
+
+async function _handleCreateRelease() {
+  if (!serviceId.value) return
+  releaseFormError.value = null
+  if (!newReleaseUrl.value && !newReleaseVersion.value) {
+    releaseFormError.value = 'Please provide at least URL or Version.'
+    return
+  }
+  const payload: ReleaseCreatePayload = {}
+  if (newReleaseUrl.value) payload.url = newReleaseUrl.value
+  if (newReleaseVersion.value) payload.version = newReleaseVersion.value
+  const iso = toUtcIso(newReleaseDateLocal.value)
+  if (iso) payload.release_date = iso
+  try {
+    creatingRelease.value = true
+    await releases.createRelease(serviceId.value, payload)
+    showAddRelease.value = false
+  } catch (e) {
+    releaseFormError.value = e instanceof Error ? e.message : 'Failed to create release'
+  } finally {
+    creatingRelease.value = false
+  }
 }
 
 async function fetchDependencies() {
@@ -556,12 +624,44 @@ onMounted(() => {
       <!-- Full width Releases card -->
       <UCard>
         <template #header>
-          <div class="font-medium">
-            Releases
+          <div class="flex items-center justify-between">
+            <div class="font-medium">
+              Releases
+            </div>
+            <UButton
+              size="xs"
+              icon="lucide:plus"
+              label="Add Release"
+              :disabled="loading"
+              @click="openAddRelease()"
+            />
           </div>
         </template>
-        <div class="text-(--ui-text-muted) text-sm">
-          Placeholder — will be implemented later.
+        <div>
+          <div v-if="releases.loading.value" class="text-(--ui-text-muted) text-sm">
+            Loading releases…
+          </div>
+          <UAlert v-else-if="releases.error.value" color="error" variant="subtle">
+            {{ releases.error }}
+          </UAlert>
+          <div v-else>
+            <div v-if="!releases.items.value.length" class="text-(--ui-text-muted) text-sm">
+              No releases yet.
+            </div>
+            <div v-else class="space-y-2">
+              <div
+                v-for="r in releases.items.value"
+                :key="r.id || r.release_date || (r.url || r.version)"
+                class="p-3 rounded-md border border-(--ui-border) bg-(--ui-bg-elevated)"
+              >
+                <div class="flex flex-wrap items-center gap-2">
+                  <span v-if="r.version" class="px-2 py-0.5 rounded-md text-xs bg-(--ui-bg-muted)">v{{ r.version }}</span>
+                  <a v-if="r.url" :href="r.url" target="_blank" rel="noopener" class="underline text-(--ui-primary)">{{ r.url }}</a>
+                  <span class="text-xs text-(--ui-text-muted)">{{ formatUtc(r.release_date) }}</span>
+                </div>
+              </div>
+            </div>
+          </div>
         </div>
       </UCard>
     </UPageSection>
@@ -657,6 +757,43 @@ onMounted(() => {
           :loading="loading"
           label="Add"
           @click="addDependency"
+        />
+      </template>
+    </UModal>
+
+    <!-- Add Release Modal -->
+    <UModal v-model:open="showAddRelease">
+      <template #header>
+        Add Release
+      </template>
+      <template #body>
+        <UForm>
+          <UFormField label="URL" description="Optional, but URL or Version is required">
+            <UInput v-model="newReleaseUrl" placeholder="https://example.com/release-notes" />
+          </UFormField>
+          <UFormField label="Version" description="Optional, but URL or Version is required">
+            <UInput v-model="newReleaseVersion" placeholder="e.g. 1.2.3" />
+          </UFormField>
+          <UFormField label="Release date" description="Optional. Defaults to current UTC if left blank.">
+            <UInput v-model="newReleaseDateLocal" type="datetime-local" />
+          </UFormField>
+        </UForm>
+        <UAlert v-if="releaseFormError" color="warning" variant="subtle" class="mt-2">
+          {{ releaseFormError }}
+        </UAlert>
+      </template>
+      <template #footer>
+        <UButton
+          color="neutral"
+          variant="ghost"
+          label="Cancel"
+          @click="showAddRelease = false"
+        />
+        <UButton
+          icon="lucide:save"
+          :loading="creatingRelease"
+          label="Create"
+          @click="_handleCreateRelease"
         />
       </template>
     </UModal>
