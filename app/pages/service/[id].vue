@@ -512,6 +512,7 @@ onMounted(() => {
                       color="neutral"
                       variant="ghost"
                       icon="lucide:trash"
+                      label="Remove"
                       aria-label="Remove dependency"
                       :disabled="loading"
                       @click="removeDependency(dep.id)"
