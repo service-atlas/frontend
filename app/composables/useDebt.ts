@@ -27,13 +27,20 @@ export function useDebt() {
       items.value = Array.isArray(data) ? data : []
     } catch (e: unknown) {
       // Treat no-debt responses as empty, not errors. Some backends return 404/204 or custom 4xx.
-      const anyErr = e as unknown as { statusCode?: number, status?: number, response?: { status: number }, message: string }
+      const anyErr = e as unknown as {
+        statusCode?: number
+        status?: number
+        response?: { status: number }
+        message?: string
+        code?: string
+        error?: { code?: string }
+      }
       const status = anyErr?.statusCode
         ?? anyErr?.status
         ?? anyErr?.response?.status
       const message: string | undefined = anyErr?.message
 
-      const code: string | undefined = anyErr?.statusCode?.toString()
+      const code: string | undefined = anyErr?.code ?? anyErr?.error?.code
 
       const isNoDebt = (
         status === 404

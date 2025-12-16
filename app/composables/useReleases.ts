@@ -23,7 +23,20 @@ export function useReleases() {
       const data = await client<ReleaseDto[]>(`/services/${serviceId}/release`, { method: 'GET' })
       items.value = Array.isArray(data) ? data : []
     } catch (e: unknown) {
-      const anyErr = e as never
+      const anyErr = e as unknown as {
+        statusCode?: number
+        status?: number
+        response?: { status?: number }
+        data?: {
+          statusCode?: number
+          status?: number
+          message?: string
+          code?: string
+        }
+        statusMessage?: string
+        message?: string
+        code?: string
+      }
       const status = anyErr?.statusCode
         ?? anyErr?.status
         ?? anyErr?.response?.status
