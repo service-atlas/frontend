@@ -27,9 +27,31 @@ export function useReports() {
     }
   }
 
+  async function getServicesByTeam(teamId: string) {
+    loading.value = true
+    error.value = null
+    try {
+      // Return payload exactly as provided by the API (array of services)
+      const data = await client<any>(`/teams/${teamId}/services`, { method: 'GET' })
+      return Array.isArray(data) ? data : []
+    } catch (e: unknown) {
+      const anyErr = e as any
+      const status: number | undefined = anyErr?.statusCode || anyErr?.status || anyErr?.response?.status
+      if (status === 404) {
+        // Treat not-found as empty list (team has no services or team not found)
+        return []
+      }
+      error.value = e instanceof Error ? e.message : 'Failed to load services for team.'
+      throw e
+    } finally {
+      loading.value = false
+    }
+  }
+
   return {
     loading,
     error,
-    getServiceRisk
+    getServiceRisk,
+    getServicesByTeam
   }
 }
