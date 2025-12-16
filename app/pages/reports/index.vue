@@ -4,6 +4,7 @@ definePageMeta({
 })
 
 const cards = [
+  { title: 'Service Risk', icon: 'lucide:shield-alert', description: 'Quantifies service risk based on tech debt and dependencies.', to: '/reports/service-risk' },
   { title: 'Service Health', icon: 'lucide:heart-pulse', description: 'Overview of the current health across all services.' },
   { title: 'Upcoming Releases', icon: 'lucide:rocket', description: 'Releases scheduled in the next 30 days.' },
   { title: 'Outstanding Debt', icon: 'lucide:alert-triangle', description: 'Open tech debt items grouped by service.' }
@@ -41,10 +42,12 @@ const cards = [
           </p>
           <template #footer>
             <UButton
+              v-if="c.to"
+              :to="c.to"
               color="neutral"
               variant="ghost"
               icon="lucide:arrow-right"
-              label="View details"
+              label="Open report"
             />
           </template>
         </UCard>

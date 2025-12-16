@@ -44,7 +44,7 @@ const isActive = (to: string) => {
         </NuxtLink>
 
         <!-- Top-level navigation as tabs -->
-        <nav aria-label="Primary" class="ml-4 self-stretch hidden sm:flex items-end gap-2 border-b border-(--ui-border)">
+        <nav aria-label="Primary" class="ml-4 self-stretch hidden sm:flex items-center gap-2">
           <NuxtLink
             v-for="item in navItems"
             :key="item.to"
