@@ -10,6 +10,8 @@ export interface ServiceDto {
 
 export function useServices() {
   const config = useRuntimeConfig()
+  // In development, route through Nuxt dev proxy at /api to avoid CORS.
+  // In production, use the configured absolute API URL, falling back to /api if missing.
   const baseURL = (import.meta.dev ? '/api' : (config.public?.apiUrl as string) || '/api')
 
   const services = ref<ServiceDto[]>([])

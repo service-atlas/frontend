@@ -2,7 +2,9 @@
 export default defineNuxtConfig({
   modules: [
     '@nuxt/eslint',
-    '@nuxt/ui'
+    '@nuxt/ui',
+    // Provide runtime icon rendering for Nuxt UI (e.g., lucide icons)
+    '@nuxt/icon'
   ],
   devtools: {
     enabled: true
