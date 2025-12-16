@@ -1,35 +1,12 @@
 <script setup lang="ts">
 definePageMeta({
+  // Redirect the home page to Services by default
+  redirect: '/services',
   title: 'Home'
 })
 </script>
 
 <template>
-  <div class="py-10">
-    <div class="mx-auto max-w-3xl">
-      <div class="grid grid-cols-1 sm:grid-cols-3 gap-4">
-        <UButton
-          to="/reports"
-          size="xl"
-          icon="lucide:bar-chart-3"
-          label="Reports"
-          block
-        />
-        <UButton
-          to="/teams"
-          size="xl"
-          icon="lucide:users"
-          label="Teams"
-          block
-        />
-        <UButton
-          to="/services"
-          size="xl"
-          icon="lucide:box"
-          label="Services"
-          block
-        />
-      </div>
-    </div>
-  </div>
+  <!-- Empty template since this page immediately redirects to /services -->
+  <div />
 </template>

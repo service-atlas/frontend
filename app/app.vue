@@ -1,4 +1,4 @@
-<script setup>
+<script setup lang="ts">
 useHead({
   meta: [
     { name: 'viewport', content: 'width=device-width, initial-scale=1' }
@@ -20,6 +20,19 @@ useSeoMeta({
   ogTitle: title,
   ogDescription: description
 })
+
+const route = useRoute()
+
+const navItems = [
+  { label: 'Reports', to: '/reports' },
+  { label: 'Teams', to: '/teams' },
+  { label: 'Services', to: '/services' }
+]
+
+const isActive = (to: string) => {
+  // consider the route active if it starts with the target path
+  return route.path === to || route.path.startsWith(to + '/')
+}
 </script>
 
 <template>
@@ -30,7 +43,28 @@ useSeoMeta({
           <AppLogo class="w-auto h-6 shrink-0" />
         </NuxtLink>
 
-        <TemplateMenu />
+        <!-- Top-level navigation as tabs -->
+        <nav aria-label="Primary" class="ml-4 self-stretch hidden sm:flex items-end gap-2 border-b border-(--ui-border)">
+          <NuxtLink
+            v-for="item in navItems"
+            :key="item.to"
+            :to="item.to"
+            class="px-3 py-2 -mb-px text-sm font-medium border-b-2 border-transparent rounded-t-md transition-colors"
+            :aria-current="isActive(item.to) ? 'page' : undefined"
+            :class="[
+              isActive(item.to)
+                ? 'text-(--ui-primary) border-(--ui-primary)'
+                : 'text-(--ui-text-muted) hover:text-(--ui-text)'
+            ]"
+          >
+            {{ item.label }}
+          </NuxtLink>
+        </nav>
+
+        <!-- Mobile menu fallback -->
+        <div class="ml-2 sm:hidden">
+          <TemplateMenu />
+        </div>
       </template>
 
       <template #right>
