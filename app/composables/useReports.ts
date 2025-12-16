@@ -1,10 +1,5 @@
 import { ref } from 'vue'
 
-export interface ServiceRiskReportDto {
-  DebtCount: Record<string, number>
-  DependentCount: number
-}
-
 export function useReports() {
   const config = useRuntimeConfig()
   const baseURL = (import.meta.dev ? '/api' : (config.public?.apiUrl as string) || '/api')
@@ -17,7 +12,8 @@ export function useReports() {
     loading.value = true
     error.value = null
     try {
-      const data = await client<ServiceRiskReportDto>(`/reports/services/${serviceId}/risk`, { method: 'GET' })
+      // Return exactly what the API sends (camelCase expected)
+      const data = await client<any>(`/reports/services/${serviceId}/risk`, { method: 'GET' })
       return data
     } catch (e: unknown) {
       const anyErr = e as any

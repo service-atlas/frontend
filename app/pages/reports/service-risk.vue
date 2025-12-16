@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import { ref, computed, onMounted } from 'vue'
 import { useServices, type ServiceDto } from '~/composables/useServices'
-import { useReports, type ServiceRiskReportDto } from '~/composables/useReports'
+import { useReports } from '~/composables/useReports'
 
 definePageMeta({
   title: 'Service Risk Report'
@@ -11,7 +11,7 @@ const { services, fetchServices, loading: loadingServices, error: servicesError 
 const { getServiceRisk, loading: loadingReport, error: reportError } = useReports()
 
 const selectedServiceId = ref<string | null>(null)
-const result = ref<ServiceRiskReportDto | null>(null)
+const result = ref<unknown | null>(null)
 const error = ref<string | null>(null)
 
 onMounted(async () => {
@@ -103,7 +103,7 @@ const isLoading = computed(() => loadingServices.value || loadingReport.value)
             </div>
           </template>
           <div class="text-3xl font-semibold">
-            {{ result?.DependentCount ?? 0 }}
+            {{ result?.dependentCount ?? 0 }}
           </div>
           <p class="text-(--ui-text-muted) text-sm mt-1">
             Number of services depending on the selected service.
@@ -115,18 +115,29 @@ const isLoading = computed(() => loadingServices.value || loadingReport.value)
               Debt Breakdown
             </div>
           </template>
-          <div
-            v-if="result?.DebtCount && Object.keys(result.DebtCount).length > 0"
-            class="flex flex-wrap gap-2"
-          >
-            <span
-              v-for="(count, key) in result.DebtCount"
-              :key="key"
-              class="inline-flex items-center gap-2 px-3 py-1.5 rounded-md bg-(--ui-bg-elevated) border border-(--ui-border)"
-            >
-              <span class="capitalize text-sm">{{ key }}</span>
-              <UBadge color="primary" variant="subtle">{{ count }}</UBadge>
-            </span>
+          <div v-if="result?.debtCount && Object.keys(result.debtCount).length > 0">
+            <table class="w-full text-sm border-collapse">
+              <thead>
+                <tr class="text-left">
+                  <th class="py-2 px-3 border-b border-(--ui-border)">
+                    Type
+                  </th>
+                  <th class="py-2 px-3 border-b border-(--ui-border)">
+                    Count
+                  </th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr v-for="([key, count]) in Object.entries(result.debtCount)" :key="key">
+                  <td class="py-2 px-3 capitalize border-b border-(--ui-border)">
+                    {{ key }}
+                  </td>
+                  <td class="py-2 px-3 border-b border-(--ui-border)">
+                    {{ count }}
+                  </td>
+                </tr>
+              </tbody>
+            </table>
           </div>
           <div v-else class="text-(--ui-text-muted) text-sm">
             No technical debt recorded for this service.

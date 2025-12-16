@@ -13,12 +13,6 @@ const cards = [
 
 <template>
   <div>
-    <UPageHero
-      title="Reports"
-      description="A high-level view across services: health, releases, and technical debt."
-      :links="[{ label: 'Refresh', icon: 'lucide:rotate-cw', color: 'neutral', variant: 'subtle' }]"
-    />
-
     <UPageSection
       title="Overview"
       description="These are initial placeholders. We will wire data sources later."
