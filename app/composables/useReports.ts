@@ -52,9 +52,9 @@ export function useReports() {
     loading.value = true
     error.value = null
     try {
-      const qp = page && Number.isFinite(page) ? `?page=${page}` : ''
-      const data = await client<any>(`/releases/${startDate}/${endDate}${qp}`, { method: 'GET' })
-      return data
+      // Backend returns a flat array with snake_case fields
+      const data = await client<any>(`/releases/${startDate}/${endDate}`, { method: 'GET' })
+      return Array.isArray(data) ? data : []
     } catch (e: unknown) {
       error.value = e instanceof Error ? e.message : 'Failed to load releases.'
       throw e

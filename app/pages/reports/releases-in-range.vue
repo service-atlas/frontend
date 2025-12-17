@@ -12,10 +12,10 @@ const startDate = ref<string>('')
 const endDate = ref<string>('')
 const error = ref<string | null>(null)
 
-// API payload is used as-is. "result" will hold `{ data: [...], pagination: {...} }`.
-const result = ref<unknown | null>(null)
+// API returns a flat array with snake_case fields
+const result = ref<unknown[] | null>(null)
 
-const hasResult = computed(() => !!result.value)
+const hasResult = computed(() => Array.isArray(result.value))
 
 function validate(): string | null {
   if (!startDate.value || !endDate.value) return 'Please select both a start date and an end date.'
@@ -23,7 +23,7 @@ function validate(): string | null {
   return null
 }
 
-async function runReport(page = 1) {
+async function runReport() {
   error.value = null
   result.value = null
   const v = validate()
@@ -32,31 +32,12 @@ async function runReport(page = 1) {
     return
   }
   try {
-    const data = await getReleasesInRange(startDate.value, endDate.value, page)
-    result.value = data
+    const data = await getReleasesInRange(startDate.value, endDate.value)
+    // Expecting an array
+    result.value = Array.isArray(data) ? data : []
   } catch (e) {
     error.value = reportError.value || (e instanceof Error ? e.message : 'Failed to load releases.')
   }
-}
-
-interface Pagination {
-  currentPage: number
-  totalPages: number
-  pageSize: number
-}
-const pageInfo = computed<Pagination>(() => {
-  const r = result.value as { pagination?: Pagination } | null
-  return r?.pagination ?? { currentPage: 1, totalPages: 1, pageSize: 50 }
-})
-
-function goPrev() {
-  const { currentPage } = pageInfo.value
-  if (currentPage > 1) runReport(currentPage - 1)
-}
-
-function goNext() {
-  const { currentPage, totalPages } = pageInfo.value
-  if (currentPage < totalPages) runReport(currentPage + 1)
 }
 </script>
 
@@ -64,7 +45,7 @@ function goNext() {
   <div>
     <UPageHero
       title="Releases in Date Range"
-      description="Fetch releases between two dates and browse with pagination."
+      description="Fetch releases between two dates."
       :links="[{ label: 'Back to Reports', to: '/reports', color: 'neutral', variant: 'subtle', icon: 'lucide:arrow-left' }]"
     />
 
@@ -88,7 +69,7 @@ function goNext() {
             label="Run report"
             :disabled="loading || !startDate || !endDate"
             :loading="loading"
-            @click="runReport(1)"
+            @click="runReport()"
           />
         </div>
       </div>
@@ -110,13 +91,10 @@ function goNext() {
             <div class="font-medium">
               Releases
             </div>
-            <div class="text-sm text-(--ui-text-muted)">
-              Page {{ pageInfo.currentPage }} of {{ pageInfo.totalPages }}
-            </div>
           </div>
         </template>
 
-        <div v-if="Array.isArray((result as any)?.data) && (result as any).data.length > 0">
+        <div v-if="Array.isArray(result) && result.length > 0">
           <table class="w-full text-sm border-collapse">
             <thead>
               <tr class="text-left">
@@ -135,16 +113,16 @@ function goNext() {
               </tr>
             </thead>
             <tbody>
-              <tr v-for="r in (result as any).data" :key="`${r.serviceId}-${r.version}-${r.releaseDate}`">
+              <tr v-for="r in result as any[]" :key="`${r.service_id}-${r.version}-${r.release_date}`">
                 <td class="py-2 px-3 border-b border-(--ui-border)">
-                  {{ r.releaseDate }}
+                  {{ r.release_date }}
                 </td>
                 <td class="py-2 px-3 border-b border-(--ui-border)">
-                  <NuxtLink :to="`/service/${r.serviceId}`" class="text-(--ui-primary) hover:underline">
-                    {{ r.serviceName || r.serviceId }}
+                  <NuxtLink :to="`/service/${r.service_id}`" class="text-(--ui-primary) hover:underline">
+                    {{ r.service_name || r.service_id }}
                   </NuxtLink>
-                  <div v-if="r.serviceType" class="text-(--ui-text-muted) text-xs mt-0.5">
-                    {{ r.serviceType }}
+                  <div v-if="r.service_type" class="text-(--ui-text-muted) text-xs mt-0.5">
+                    {{ r.service_type }}
                   </div>
                 </td>
                 <td class="py-2 px-3 border-b border-(--ui-border)">
@@ -157,31 +135,6 @@ function goNext() {
               </tr>
             </tbody>
           </table>
-
-          <div class="flex items-center justify-between mt-3">
-            <div class="text-sm text-(--ui-text-muted)">
-              Showing up to {{ pageInfo.pageSize }} per page
-            </div>
-            <div class="flex gap-2">
-              <UButton
-                color="neutral"
-                variant="ghost"
-                icon="lucide:chevron-left"
-                label="Previous"
-                :disabled="loading || pageInfo.currentPage <= 1"
-                @click="goPrev"
-              />
-              <UButton
-                color="neutral"
-                variant="ghost"
-                icon="lucide:chevron-right"
-                trailing
-                label="Next"
-                :disabled="loading || pageInfo.currentPage >= pageInfo.totalPages"
-                @click="goNext"
-              />
-            </div>
-          </div>
         </div>
         <div v-else class="text-(--ui-text-muted) text-sm">
           No releases found for the selected range.
