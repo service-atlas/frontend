@@ -44,7 +44,7 @@ const isActive = (to: string) => {
         </NuxtLink>
 
         <!-- Top-level navigation as tabs -->
-        <nav aria-label="Primary" class="ml-4 self-stretch hidden sm:flex items-end gap-2 border-b border-(--ui-border)">
+        <nav aria-label="Primary" class="ml-4 self-stretch hidden sm:flex items-center gap-2">
           <NuxtLink
             v-for="item in navItems"
             :key="item.to"
@@ -96,7 +96,7 @@ const isActive = (to: string) => {
 
       <template #right>
         <UButton
-          to="https://github.com/nuxt-ui-templates/starter"
+          to="https://github.com/service-atlas"
           target="_blank"
           icon="simple-icons:github"
           aria-label="GitHub"
