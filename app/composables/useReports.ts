@@ -48,12 +48,16 @@ export function useReports() {
     }
   }
 
-  async function getReleasesInRange(startDate: string, endDate: string, page: number = 1) {
+  async function getReleasesInRange(startDate: string, endDate: string, page: number = 1, pageSize: number = 25) {
     loading.value = true
     error.value = null
     try {
       // Backend returns a flat array with snake_case fields
-      const data = await client<any>(`/releases/${startDate}/${endDate}`, { method: 'GET' })
+      const query = new URLSearchParams({
+        page: String(page ?? 1),
+        pageSize: String(pageSize ?? 25)
+      })
+      const data = await client<any>(`/releases/${startDate}/${endDate}?${query.toString()}`, { method: 'GET' })
       return Array.isArray(data) ? data : []
     } catch (e: unknown) {
       error.value = e instanceof Error ? e.message : 'Failed to load releases.'

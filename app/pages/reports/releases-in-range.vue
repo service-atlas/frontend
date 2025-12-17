@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { ref, computed } from 'vue'
+import { ref, computed, watch } from 'vue'
 import { useReports } from '~/composables/useReports'
 
 definePageMeta({
@@ -11,6 +11,10 @@ const { getReleasesInRange, loading, error: reportError } = useReports()
 const startDate = ref<string>('')
 const endDate = ref<string>('')
 const error = ref<string | null>(null)
+
+// Pagination state
+const page = ref<number>(1)
+const pageSize = 25
 
 // API returns a flat array with snake_case fields
 const result = ref<unknown[] | null>(null)
@@ -32,11 +36,28 @@ async function runReport() {
     return
   }
   try {
-    const data = await getReleasesInRange(startDate.value, endDate.value)
+    const data = await getReleasesInRange(startDate.value, endDate.value, page.value, pageSize)
     // Expecting an array
     result.value = Array.isArray(data) ? data : []
   } catch (e) {
     error.value = reportError.value || (e instanceof Error ? e.message : 'Failed to load releases.')
+  }
+}
+
+// Reset page when dates change
+watch([startDate, endDate], () => {
+  page.value = 1
+})
+
+function nextPage() {
+  page.value += 1
+  runReport()
+}
+
+function prevPage() {
+  if (page.value > 1) {
+    page.value -= 1
+    runReport()
   }
 }
 </script>
@@ -91,6 +112,25 @@ async function runReport() {
             <div class="font-medium">
               Releases
             </div>
+            <div class="flex items-center gap-2" v-if="Array.isArray(result)">
+              <UButton
+                size="xs"
+                variant="subtle"
+                color="neutral"
+                icon="lucide:chevron-left"
+                :disabled="loading || page <= 1"
+                @click="prevPage()"
+              />
+              <span class="text-xs text-(--ui-text-muted)">Page {{ page }}</span>
+              <UButton
+                size="xs"
+                variant="subtle"
+                color="neutral"
+                icon="lucide:chevron-right"
+                :disabled="loading || (Array.isArray(result) && result.length < 25)"
+                @click="nextPage()"
+              />
+            </div>
           </div>
         </template>
 
@@ -135,6 +175,29 @@ async function runReport() {
               </tr>
             </tbody>
           </table>
+          <div class="flex items-center justify-end gap-2 mt-3">
+            <UButton
+              size="sm"
+              variant="soft"
+              color="neutral"
+              icon="lucide:chevron-left"
+              :disabled="loading || page <= 1"
+              label="Previous"
+              @click="prevPage()"
+            />
+            <div class="text-xs text-(--ui-text-muted)">
+              Page {{ page }}
+            </div>
+            <UButton
+              size="sm"
+              variant="soft"
+              color="neutral"
+              trailing-icon="lucide:chevron-right"
+              :disabled="loading || (Array.isArray(result) && result.length < 25)"
+              label="Next"
+              @click="nextPage()"
+            />
+          </div>
         </div>
         <div v-else class="text-(--ui-text-muted) text-sm">
           No releases found for the selected range.
