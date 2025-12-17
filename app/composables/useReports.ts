@@ -48,10 +48,26 @@ export function useReports() {
     }
   }
 
+  async function getReleasesInRange(startDate: string, endDate: string, page: number = 1) {
+    loading.value = true
+    error.value = null
+    try {
+      const qp = page && Number.isFinite(page) ? `?page=${page}` : ''
+      const data = await client<any>(`/releases/${startDate}/${endDate}${qp}`, { method: 'GET' })
+      return data
+    } catch (e: unknown) {
+      error.value = e instanceof Error ? e.message : 'Failed to load releases.'
+      throw e
+    } finally {
+      loading.value = false
+    }
+  }
+
   return {
     loading,
     error,
     getServiceRisk,
-    getServicesByTeam
+    getServicesByTeam,
+    getReleasesInRange
   }
 }

@@ -6,17 +6,15 @@ definePageMeta({
 const cards = [
   { title: 'Service Risk', icon: 'lucide:shield-alert', description: 'Quantifies service risk based on tech debt and dependencies.', to: '/reports/service-risk' },
   { title: 'Services by Team', icon: 'lucide:users', description: 'Select a team to list all services owned by that team.', to: '/reports/services-by-team' },
-  { title: 'Service Health', icon: 'lucide:heart-pulse', description: 'Overview of the current health across all services.' },
-  { title: 'Upcoming Releases', icon: 'lucide:rocket', description: 'Releases scheduled in the next 30 days.' },
-  { title: 'Outstanding Debt', icon: 'lucide:alert-triangle', description: 'Open tech debt items grouped by service.' }
+  { title: 'Releases in Date Range', icon: 'lucide:calendar-range', description: 'List all releases between two dates with pagination.', to: '/reports/releases-in-range' }
 ]
 </script>
 
 <template>
   <div>
     <UPageSection
-      title="Overview"
-      description="These are initial placeholders. We will wire data sources later."
+      title="Reports"
+      description="Run the available reports below."
     >
       <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
         <UCard

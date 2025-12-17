@@ -96,7 +96,7 @@ const isActive = (to: string) => {
 
       <template #right>
         <UButton
-          to="https://github.com/nuxt-ui-templates/starter"
+          to="https://github.com/service-atlas"
           target="_blank"
           icon="simple-icons:github"
           aria-label="GitHub"
