@@ -35,6 +35,13 @@ type DependencyDto = {
   version?: string | null
 }
 
+// Dependents returned by GET /services/:id/dependents
+type DependentDto = {
+  id: string
+  name?: string
+  type?: string
+}
+
 type ReleaseCreatePayload = {
   url?: string
   version?: string
@@ -61,6 +68,9 @@ const dependencies = _ref<DependencyDto[]>([])
 const showAddDependency = _ref(false)
 const selectedDependencyId = _ref<string | null>(null)
 const selectedDependencyVersion = _ref<string>('')
+
+// Dependents state
+const dependents = _ref<DependentDto[]>([])
 
 // Releases state
 const showAddRelease = _ref(false)
@@ -97,6 +107,7 @@ async function loadAll() {
       fetchAssignedTeams().catch(() => undefined),
       debt.listDebt(serviceId.value).catch(() => undefined),
       fetchDependencies().catch(() => undefined),
+      fetchDependents().catch(() => undefined),
       fetchServices().catch(() => undefined),
       releases.listReleases(serviceId.value).catch(() => undefined)
     ])
@@ -168,6 +179,12 @@ async function fetchDependencies() {
   if (!serviceId.value) return
   const data = await client<DependencyDto[]>(`/services/${serviceId.value}/dependencies`, { method: 'GET' })
   dependencies.value = Array.isArray(data) ? data : []
+}
+
+async function fetchDependents() {
+  if (!serviceId.value) return
+  const data = await client<DependentDto[]>(`/services/${serviceId.value}/dependents`, { method: 'GET' })
+  dependents.value = Array.isArray(data) ? data : []
 }
 
 async function addDependency() {
@@ -445,108 +462,110 @@ onMounted(() => {
         </div>
       </UCard>
 
-      <!-- Two half-width cards (Debt, Dependencies) -->
-      <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
-        <UCard>
-          <template #header>
-            <div class="font-medium">
-              Debt
-            </div>
-          </template>
-          <div>
-            <div class="flex items-center justify-between mb-3">
-              <p class="text-(--ui-text-muted) text-sm">
-                Track technical debt items for this service.
-              </p>
-              <UButton
-                icon="lucide:plus"
-                label="New"
-                :disabled="loading"
-                @click="showCreateDebt = true"
-              />
-            </div>
-            <p v-if="debt.loading.value === true" class="text-(--ui-text-muted) text-sm">
-              Loading debts…
+      <!-- Full-width Debt card -->
+      <UCard class="mb-4">
+        <template #header>
+          <div class="font-medium">
+            Debt
+          </div>
+        </template>
+        <div>
+          <div class="flex items-center justify-between mb-3">
+            <p class="text-(--ui-text-muted) text-sm">
+              Track technical debt items for this service.
             </p>
-            <div v-else>
-              <p v-if="debt.items.value.length === 0" class="text-(--ui-text-muted) text-sm">
-                No debts to display.
-              </p>
-              <div v-else class="space-y-2">
-                <div
-                  v-for="d in debt.items.value"
-                  :key="d.id"
-                  class="flex items-start justify-between gap-3 p-3 rounded-md border border-(--ui-border) bg-(--ui-bg-elevated)"
-                >
-                  <div class="min-w-0">
-                    <div class="flex items-center gap-2">
-                      <span class="font-medium truncate">{{ d.title }}</span>
-                      <span v-if="d.type" class="px-2 py-0.5 rounded-md text-xs bg-(--ui-bg-muted)">{{ d.type }}</span>
-                    </div>
-                    <p v-if="d.description" class="text-sm text-(--ui-text-muted) truncate max-w-[480px]">
-                      {{ d.description }}
-                    </p>
+            <UButton
+              icon="lucide:plus"
+              label="New"
+              :disabled="loading"
+              @click="showCreateDebt = true"
+            />
+          </div>
+          <p v-if="debt.loading.value === true" class="text-(--ui-text-muted) text-sm">
+            Loading debts…
+          </p>
+          <div v-else>
+            <p v-if="debt.items.value.length === 0" class="text-(--ui-text-muted) text-sm">
+              No debts to display.
+            </p>
+            <div v-else class="space-y-2">
+              <div
+                v-for="d in debt.items.value"
+                :key="d.id"
+                class="flex items-start justify-between gap-3 p-3 rounded-md border border-(--ui-border) bg-(--ui-bg-elevated)"
+              >
+                <div class="min-w-0">
+                  <div class="flex items-center gap-2">
+                    <span class="font-medium truncate">{{ d.title }}</span>
+                    <span v-if="d.type" class="px-2 py-0.5 rounded-md text-xs bg-(--ui-bg-muted)">{{ d.type }}</span>
                   </div>
-                  <div class="flex items-center gap-2 shrink-0">
-                    <USelect
-                      :items="debtStatusItems"
-                      :model-value="d.status"
-                      class="min-w-[150px]"
-                      @update:model-value="(v) => handleUpdateDebtStatus(d, v as DebtItemDto['status'])"
-                    />
-                  </div>
+                  <p v-if="d.description" class="text-sm text-(--ui-text-muted) truncate max-w-[480px]">
+                    {{ d.description }}
+                  </p>
+                </div>
+                <div class="flex items-center gap-2 shrink-0">
+                  <USelect
+                    :items="debtStatusItems"
+                    :model-value="d.status"
+                    class="min-w-[150px]"
+                    @update:model-value="(v) => handleUpdateDebtStatus(d, v as DebtItemDto['status'])"
+                  />
                 </div>
               </div>
             </div>
-
-            <UAlert
-              v-if="debt.error && debt.items.length > 0"
-              color="error"
-              variant="subtle"
-              class="mt-3"
-            >
-              {{ debt.error }}
-            </UAlert>
           </div>
-        </UCard>
 
-        <!-- Create Debt Modal -->
-        <UModal v-model:open="showCreateDebt">
-          <template #header>
-            New Debt Item
-          </template>
-          <template #body>
-            <UForm>
-              <UFormField label="Title" required>
-                <UInput v-model="newDebtTitle" placeholder="e.g. Replace legacy library" />
-              </UFormField>
-              <UFormField label="Type" description="Categorize the debt">
-                <USelect v-model="newDebtType" :items="debtTypeItems" class="min-w-[200px]" />
-              </UFormField>
-              <UFormField label="Status">
-                <USelect v-model="newDebtStatus" :items="debtStatusItems" class="min-w-[200px]" />
-              </UFormField>
-              <UFormField label="Description">
-                <UTextarea v-model="newDebtDescription" placeholder="Add more details…" />
-              </UFormField>
-            </UForm>
-          </template>
-          <template #footer>
-            <UButton
-              color="neutral"
-              variant="ghost"
-              label="Cancel"
-              @click="showCreateDebt = false"
-            />
-            <UButton
-              icon="lucide:plus"
-              :disabled="!canCreateDebt || loading"
-              :loading="loading"
-              label="Create"
-              @click="handleCreateDebt"
-            />
-          </template>
-        </UModal>
+          <UAlert
+            v-if="debt.error && debt.items.length > 0"
+            color="error"
+            variant="subtle"
+            class="mt-3"
+          >
+            {{ debt.error }}
+          </UAlert>
+        </div>
+      </UCard>
+
+      <!-- Create Debt Modal -->
+      <UModal v-model:open="showCreateDebt">
+        <template #header>
+          New Debt Item
+        </template>
+        <template #body>
+          <UForm>
+            <UFormField label="Title" required>
+              <UInput v-model="newDebtTitle" placeholder="e.g. Replace legacy library" />
+            </UFormField>
+            <UFormField label="Type" description="Categorize the debt">
+              <USelect v-model="newDebtType" :items="debtTypeItems" class="min-w-[200px]" />
+            </UFormField>
+            <UFormField label="Status">
+              <USelect v-model="newDebtStatus" :items="debtStatusItems" class="min-w-[200px]" />
+            </UFormField>
+            <UFormField label="Description">
+              <UTextarea v-model="newDebtDescription" placeholder="Add more details…" />
+            </UFormField>
+          </UForm>
+        </template>
+        <template #footer>
+          <UButton
+            color="neutral"
+            variant="ghost"
+            label="Cancel"
+            @click="showCreateDebt = false"
+          />
+          <UButton
+            icon="lucide:plus"
+            :disabled="!canCreateDebt || loading"
+            :loading="loading"
+            label="Create"
+            @click="handleCreateDebt"
+          />
+        </template>
+      </UModal>
+
+      <!-- Two half-width cards (Dependencies, Dependents) -->
+      <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
         <UCard>
           <template #header>
             <div class="font-medium">
@@ -604,6 +623,53 @@ onMounted(() => {
                       :disabled="loading"
                       @click="openRemoveDepConfirm(dep)"
                     />
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <UAlert
+              v-if="error"
+              color="error"
+              variant="subtle"
+              class="mt-3"
+            >
+              {{ error }}
+            </UAlert>
+          </div>
+        </UCard>
+
+        <UCard>
+          <template #header>
+            <div class="font-medium">
+              Dependents
+            </div>
+          </template>
+          <div>
+            <p v-if="loading && dependents.length === 0" class="text-(--ui-text-muted) text-sm">
+              Loading dependents…
+            </p>
+
+            <div v-else>
+              <p v-if="dependents.length === 0" class="text-(--ui-text-muted) text-sm">
+                No dependents yet.
+              </p>
+              <div v-else class="space-y-2">
+                <div
+                  v-for="dep in dependents"
+                  :key="dep.id"
+                  class="flex items-center justify-between gap-3 p-3 rounded-md border border-(--ui-border) bg-(--ui-bg-elevated)"
+                >
+                  <div class="min-w-0">
+                    <div class="flex items-center gap-2">
+                      <NuxtLink :to="`/service/${dep.id}`" class="font-medium truncate underline text-(--ui-primary)">
+                        {{ dep.name || dep.id }}
+                      </NuxtLink>
+                      <span v-if="dep.type" class="px-2 py-0.5 rounded-md text-xs bg-(--ui-bg-muted)">{{ dep.type }}</span>
+                    </div>
+                    <div class="text-xs text-(--ui-text-muted) font-mono truncate">
+                      {{ dep.id }}
+                    </div>
                   </div>
                 </div>
               </div>
