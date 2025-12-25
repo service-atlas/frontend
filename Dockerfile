@@ -12,8 +12,10 @@ ENV COREPACK_INTEGRITY_KEYS=0
 RUN corepack enable
 
 # Install deps first (better layer caching)
-COPY package.json pnpm-lock.yaml pnpm-workspace.yaml ./
-RUN pnpm install --frozen-lockfile
+# Copy only package.json (and workspace file if needed). We intentionally
+# do NOT copy pnpm-lock.yaml to avoid mismatch when using npm locally.
+COPY package.json pnpm-workspace.yaml ./
+RUN pnpm install --no-frozen-lockfile
 
 # Copy the rest and build
 COPY . .
@@ -25,11 +27,11 @@ WORKDIR /app
 
 ENV NODE_ENV=production
 
-# Create non-root user
-RUN addgroup -S nodejs && adduser -S node -G nodejs
+# The official Node image already provides a non-root user named `node`.
+# We'll use it and ensure copied files are owned by this user.
 
-# Copy Nitro output
-COPY --from=build /app/.output ./.output
+# Copy Nitro output and set ownership so the `node` user can read/execute
+COPY --from=build --chown=node:node /app/.output ./.output
 
 USER node
 EXPOSE 3000
