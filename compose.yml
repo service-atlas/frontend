@@ -14,7 +14,7 @@ services:
       timeout: 3s
       retries: 5
 
-  service_map:
+  backend:
     image: ghcr.io/service-atlas/backend:latest
     ports:
       - "8080:8080"
@@ -29,11 +29,12 @@ services:
     ports:
       - "3000:3000"
     depends_on:
-      - service_map
+      - backend
     environment:
       # Point the Nuxt app to the backend running in this compose
-      NUXT_PUBLIC_API_URL: http://service_map:8080
-      API_URL: http://service_map:8080
+      # Use localhost so the browser (running on the host) can reach it via the published port
+      NUXT_PUBLIC_API_URL: http://localhost:8080
+      API_URL: http://localhost:8080
 
 networks:
   default:
