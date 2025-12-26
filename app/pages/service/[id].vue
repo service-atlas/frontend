@@ -52,6 +52,37 @@ const service = _ref<ServiceDto | null>(null)
 const loading = _ref(false)
 const error = _ref<string | null>(null)
 
+// Change Risk (from /reports/services/:id/change_risk)
+type ChangeRiskDto = {
+  risk?: string
+  score?: number
+}
+const changeRisk = _ref<ChangeRiskDto | null>(null)
+const changeRiskLoading = _ref(false)
+
+async function fetchChangeRisk() {
+  if (!serviceId.value) return
+  changeRiskLoading.value = true
+  try {
+    const data = await client<ChangeRiskDto>(`/reports/services/${serviceId.value}/change_risk`, { method: 'GET' })
+    changeRisk.value = data || null
+  } catch {
+    // Silent fail: leave changeRisk null so UI shows "unknown"
+  } finally {
+    changeRiskLoading.value = false
+  }
+}
+
+const headerDescription = computed(() => {
+  const parts: string[] = []
+  if (service.value?.type) parts.push(`Type: ${service.value.type}`)
+  const riskText = changeRiskLoading.value
+    ? 'Change risk: Loading…'
+    : `Change risk: ${(changeRisk.value?.risk ?? 'unknown')}${typeof changeRisk.value?.score === 'number' ? ` (${changeRisk.value.score})` : ''}`
+  parts.push(riskText)
+  return parts.join(' • ')
+})
+
 // Assigned teams for this service
 const assigned = _ref<TeamDto[]>([])
 
@@ -109,7 +140,8 @@ async function loadAll() {
       fetchDependencies().catch(() => undefined),
       fetchDependents().catch(() => undefined),
       fetchServices().catch(() => undefined),
-      releases.listReleases(serviceId.value).catch(() => undefined)
+      releases.listReleases(serviceId.value).catch(() => undefined),
+      fetchChangeRisk().catch(() => undefined)
     ])
     service.value = svc
   } catch (e: unknown) {
@@ -356,7 +388,7 @@ onMounted(() => {
   <div>
     <UPageSection
       :title="service?.name || 'Service'"
-      :description="service?.type ? `Type: ${service.type}` : undefined"
+      :description="headerDescription"
     >
       <!-- Full-width Service Info and Teams Card -->
       <UCard class="mb-4">

@@ -47,7 +47,7 @@ const isLoading = computed(() => loadingServices.value || loadingReport.value)
   <div>
     <UPageHero
       title="Service Risk Report"
-      description="Quantifies service risk based on amount of technical debt and number of dependent services."
+      description="Shows health risk (technical debt and dependents) and change risk (risk level and score)."
       :links="[{ label: 'Back to Reports', to: '/reports', color: 'neutral', variant: 'subtle', icon: 'lucide:arrow-left' }]"
     />
 
@@ -99,11 +99,26 @@ const isLoading = computed(() => loadingServices.value || loadingReport.value)
         <UCard>
           <template #header>
             <div class="font-medium">
+              Change Risk
+            </div>
+          </template>
+          <div>
+            <div class="text-2xl font-semibold capitalize">
+              {{ (result as any)?.changeRisk?.risk ?? 'unknown' }}
+            </div>
+            <div class="text-(--ui-text-muted) text-sm mt-1">
+              Score: {{ (result as any)?.changeRisk?.score ?? 0 }}
+            </div>
+          </div>
+        </UCard>
+        <UCard>
+          <template #header>
+            <div class="font-medium">
               Dependent Services
             </div>
           </template>
           <div class="text-3xl font-semibold">
-            {{ result?.dependentCount ?? 0 }}
+            {{ (result as any)?.healthRisk?.dependentCount ?? 0 }}
           </div>
           <p class="text-(--ui-text-muted) text-sm mt-1">
             Number of services depending on the selected service.
@@ -115,7 +130,7 @@ const isLoading = computed(() => loadingServices.value || loadingReport.value)
               Debt Breakdown
             </div>
           </template>
-          <div v-if="result?.debtCount && Object.keys(result.debtCount).length > 0">
+          <div v-if="(result as any)?.healthRisk?.debtCount && Object.keys((result as any).healthRisk.debtCount).length > 0">
             <table class="w-full text-sm border-collapse">
               <thead>
                 <tr class="text-left">
@@ -128,7 +143,7 @@ const isLoading = computed(() => loadingServices.value || loadingReport.value)
                 </tr>
               </thead>
               <tbody>
-                <tr v-for="([key, count]) in Object.entries(result.debtCount)" :key="key">
+                <tr v-for="([key, count]) in Object.entries((result as any).healthRisk.debtCount)" :key="key">
                   <td class="py-2 px-3 capitalize border-b border-(--ui-border)">
                     {{ key }}
                   </td>
