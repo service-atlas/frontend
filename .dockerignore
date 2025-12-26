@@ -1,0 +1,11 @@
+node_modules
+.output
+.nuxt
+.git
+.gitignore
+.npmrc
+.pnpm-store
+.cache
+Dockerfile
+**/.DS_Store
+pnpm-lock.yaml

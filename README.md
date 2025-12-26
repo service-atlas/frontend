@@ -11,7 +11,7 @@ Service Atlas is a Nuxt 4 application that helps you manage services and teams, 
 - ESLint (Nuxt config)
 
 ## Prerequisites
-- Node.js 18.20+ (Node 20+ recommended)
+- Node.js 18.20+ (Node 24+ recommended)
 - pnpm (the repo is configured with `packageManager: pnpm`)
 - A running Service Atlas API or any API exposing the expected endpoints
 
@@ -95,3 +95,23 @@ This is a standard Nuxt 4 app. Consult Nuxt’s deployment guide for your target
 https://nuxt.com/docs/getting-started/deployment
 
 Ensure the backend API is reachable at the URL set in `API_URL` or that you provide an equivalent reverse proxy at `/api/*`.
+
+## Docker
+Build a production image and run the Nitro server. Pass the backend URL at runtime with `NUXT_PUBLIC_API_URL` (preferred) or `API_URL`.
+
+Build:
+```
+docker build -t service-atlas-frontend .
+```
+
+Run (example API at https://api.example.com):
+```
+docker run --rm -p 3000:3000 \
+  -e NUXT_PUBLIC_API_URL=https://api.example.com \
+  service-atlas-frontend
+```
+
+Notes:
+- The app listens on port 3000 in the container.
+- `NUXT_PUBLIC_API_URL` overrides `runtimeConfig.public.apiUrl` at runtime and is recommended for containers.
+- If you prefer, you can use `-e API_URL=...` which is the default used in `nuxt.config.ts`; however, `NUXT_PUBLIC_API_URL` will always take precedence if both are set.
