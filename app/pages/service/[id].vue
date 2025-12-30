@@ -32,6 +32,7 @@ type ServiceDto = Awaited<ReturnType<typeof getService>>
 type DependencyDto = {
   id: string
   name?: string
+  type?: string
   version?: string | null
 }
 
@@ -117,7 +118,10 @@ const availableDependencyOptions = computed(() => {
   const currentId = serviceId.value
   return (services.value || [])
     .filter(s => s.id !== currentId && !dependentIds.value.has(s.id))
-    .map(s => ({ label: s.name, value: s.id }))
+    .map(s => ({
+      label: s.type ? `${s.name} (${s.type})` : s.name,
+      value: s.id
+    }))
 })
 
 const serviceById = computed(() => {
@@ -620,12 +624,12 @@ onMounted(() => {
                       <span class="font-medium truncate">
                         {{ serviceById.get(dep.id)?.name || dep.name || dep.id }}
                       </span>
+                      <span v-if="serviceById.get(dep.id)?.type || dep.type" class="px-2 py-0.5 rounded-md text-xs bg-(--ui-bg-muted)">
+                        {{ serviceById.get(dep.id)?.type || dep.type }}
+                      </span>
                       <span v-if="dep.version" class="px-2 py-0.5 rounded-md text-xs bg-(--ui-bg-muted)">
                         v{{ dep.version }}
                       </span>
-                    </div>
-                    <div class="text-xs text-(--ui-text-muted) font-mono truncate">
-                      {{ dep.id }}
                     </div>
                   </div>
                   <div class="shrink-0">
@@ -682,9 +686,6 @@ onMounted(() => {
                         {{ dep.name || dep.id }}
                       </NuxtLink>
                       <span v-if="dep.type" class="px-2 py-0.5 rounded-md text-xs bg-(--ui-bg-muted)">{{ dep.type }}</span>
-                    </div>
-                    <div class="text-xs text-(--ui-text-muted) font-mono truncate">
-                      {{ dep.id }}
                     </div>
                   </div>
                 </div>
