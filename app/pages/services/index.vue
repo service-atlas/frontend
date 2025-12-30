@@ -25,6 +25,8 @@ onMounted(() => {
 const showCreate = _ref(false)
 const createName = _ref('')
 const createType = _ref('')
+const createDescription = _ref('')
+const createUrl = _ref('')
 const canCreate = computed(() => createName.value.trim().length > 0)
 
 // Type suggestions based on existing data
@@ -45,12 +47,19 @@ const showTypeSuggestions = _ref(false)
 
 async function _handleCreate() {
   if (!canCreate.value) return
-  const payload: { name: string, type?: string } = { name: createName.value.trim() }
+  const payload: { name: string, type?: string, description?: string, url?: string } = { name: createName.value.trim() }
   const t = createType.value.trim()
   if (t) payload.type = t
+  const desc = createDescription.value.trim()
+  if (desc) payload.description = desc
+  const url = createUrl.value.trim()
+  if (url) payload.url = url
+
   await createService(payload)
   createName.value = ''
   createType.value = ''
+  createDescription.value = ''
+  createUrl.value = ''
   showTypeSuggestions.value = false
   showCreate.value = false
 }
@@ -311,6 +320,18 @@ async function _handleDelete() {
                 </button>
               </div>
             </div>
+          </UFormField>
+          <UFormField label="URL">
+            <UInput
+              v-model="createUrl"
+              placeholder="https://example.com"
+            />
+          </UFormField>
+          <UFormField label="Description">
+            <UTextarea
+              v-model="createDescription"
+              placeholder="Service description..."
+            />
           </UFormField>
         </UForm>
       </template>

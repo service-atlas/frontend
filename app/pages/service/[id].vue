@@ -16,7 +16,7 @@ definePageMeta({
 const route = useRoute()
 const serviceId = computed(() => String(route.params.id || ''))
 
-const { getService, services, fetchServices } = useServices()
+const { getService, services, fetchServices, updateService } = useServices()
 const { teams, fetchTeams } = useTeams()
 const debt = useDebt()
 const releases = useReleases()
@@ -32,6 +32,7 @@ type ServiceDto = Awaited<ReturnType<typeof getService>>
 type DependencyDto = {
   id: string
   name?: string
+  type?: string
   version?: string | null
 }
 
@@ -51,6 +52,51 @@ type ReleaseCreatePayload = {
 const service = _ref<ServiceDto | null>(null)
 const loading = _ref(false)
 const error = _ref<string | null>(null)
+
+// Editing state
+const isEditing = _ref(false)
+const editName = _ref('')
+const editDescription = _ref('')
+const editUrl = _ref('')
+
+function startEditing() {
+  if (!service.value) return
+  editName.value = service.value.name || ''
+  editDescription.value = service.value.description || ''
+  editUrl.value = service.value.url || ''
+  isEditing.value = true
+}
+
+function cancelEditing() {
+  isEditing.value = false
+  error.value = null
+}
+
+async function handleSave() {
+  if (!service.value) return
+  try {
+    loading.value = true
+    error.value = null
+    const updated = {
+      ...service.value,
+      name: editName.value.trim(),
+      description: editDescription.value.trim(),
+      url: editUrl.value.trim()
+    }
+    await updateService(updated)
+    service.value.name = updated.name
+    service.value.description = updated.description
+    service.value.url = updated.url
+    isEditing.value = false
+  } catch (e: unknown) {
+    error.value = 'Failed to update service details. Please try again.'
+    if (e instanceof Error && e.message) {
+      console.error('Update service error:', e.message)
+    }
+  } finally {
+    loading.value = false
+  }
+}
 
 // Change Risk (from /reports/services/:id/change_risk)
 type ChangeRiskDto = {
@@ -117,7 +163,10 @@ const availableDependencyOptions = computed(() => {
   const currentId = serviceId.value
   return (services.value || [])
     .filter(s => s.id !== currentId && !dependentIds.value.has(s.id))
-    .map(s => ({ label: s.name, value: s.id }))
+    .map(s => ({
+      label: s.type ? `${s.name} (${s.type})` : s.name,
+      value: s.id
+    }))
 })
 
 const serviceById = computed(() => {
@@ -379,6 +428,34 @@ async function handleUpdateDebtStatus(item: DebtItemDto, status: DebtItemDto['st
   }
 }
 
+const tierOptions = [
+  { label: 'Tier 1', value: 1 },
+  { label: 'Tier 2', value: 2 },
+  { label: 'Tier 3', value: 3 },
+  { label: 'Tier 4', value: 4 }
+]
+
+async function handleUpdateTier(newTier: string | number) {
+  if (!service.value) return
+  const tier = typeof newTier === 'string' ? parseInt(newTier, 10) : newTier
+  try {
+    loading.value = true
+    error.value = null
+    await updateService({
+      ...service.value,
+      tier
+    })
+    service.value.tier = tier
+  } catch (e: unknown) {
+    error.value = 'Failed to update service tier. Please try again.'
+    if (e instanceof Error && e.message) {
+      console.error('Update tier error:', e.message)
+    }
+  } finally {
+    loading.value = false
+  }
+}
+
 onMounted(() => {
   loadAll()
 })
@@ -397,14 +474,76 @@ onMounted(() => {
             <div class="font-medium">
               Service details
             </div>
-            <span v-if="loading" class="text-(--ui-text-muted) text-sm">
-              Loading…
-            </span>
+            <div class="flex items-center gap-2">
+              <span v-if="loading" class="text-(--ui-text-muted) text-sm mr-2">
+                Loading…
+              </span>
+              <template v-if="!isEditing">
+                <UButton
+                  size="xs"
+                  icon="lucide:edit"
+                  label="Edit"
+                  color="neutral"
+                  variant="ghost"
+                  :disabled="loading"
+                  @click="startEditing"
+                />
+              </template>
+              <template v-else>
+                <UButton
+                  size="xs"
+                  label="Cancel"
+                  color="neutral"
+                  variant="ghost"
+                  @click="cancelEditing"
+                />
+                <UButton
+                  size="xs"
+                  icon="lucide:save"
+                  label="Save"
+                  :loading="loading"
+                  @click="handleSave"
+                />
+              </template>
+            </div>
           </div>
         </template>
 
         <div class="space-y-4">
-          <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+          <div class="grid grid-cols-1 sm:grid-cols-3 gap-4">
+            <div v-if="isEditing" class="sm:col-span-3">
+              <UFormField label="Name">
+                <UInput v-model="editName" class="w-full" />
+              </UFormField>
+            </div>
+            <div v-if="isEditing" class="sm:col-span-3">
+              <UFormField label="Description">
+                <UTextarea v-model="editDescription" class="w-full" />
+              </UFormField>
+            </div>
+            <div v-if="isEditing" class="sm:col-span-3">
+              <UFormField label="URL">
+                <UInput v-model="editUrl" class="w-full" placeholder="https://example.com" />
+              </UFormField>
+            </div>
+            <div v-if="!isEditing && service?.description" class="sm:col-span-3">
+              <div class="text-xs text-(--ui-text-muted)">
+                Description
+              </div>
+              <div class="text-sm whitespace-pre-wrap">
+                {{ service.description }}
+              </div>
+            </div>
+            <div v-if="!isEditing && service?.url" class="sm:col-span-3">
+              <div class="text-xs text-(--ui-text-muted)">
+                URL
+              </div>
+              <div class="text-sm">
+                <a :href="service.url" target="_blank" rel="noopener" class="underline text-(--ui-primary) break-all">
+                  {{ service.url }}
+                </a>
+              </div>
+            </div>
             <div>
               <div class="text-xs text-(--ui-text-muted)">
                 Service ID
@@ -419,6 +558,21 @@ onMounted(() => {
               </div>
               <div class="text-sm">
                 {{ service?.type || '—' }}
+              </div>
+            </div>
+            <div>
+              <div class="text-xs text-(--ui-text-muted)">
+                Tier
+              </div>
+              <div class="mt-1">
+                <USelect
+                  :model-value="service?.tier"
+                  :items="tierOptions"
+                  placeholder="Select tier…"
+                  class="min-w-[150px]"
+                  :disabled="loading"
+                  @update:model-value="handleUpdateTier"
+                />
               </div>
             </div>
           </div>
@@ -472,8 +626,11 @@ onMounted(() => {
             color="error"
             variant="subtle"
             class="mt-2"
+            title="Update Error"
           >
-            {{ error }}
+            <template #description>
+              {{ error }}
+            </template>
           </UAlert>
         </div>
       </UCard>
@@ -620,12 +777,12 @@ onMounted(() => {
                       <span class="font-medium truncate">
                         {{ serviceById.get(dep.id)?.name || dep.name || dep.id }}
                       </span>
+                      <span v-if="serviceById.get(dep.id)?.type || dep.type" class="px-2 py-0.5 rounded-md text-xs bg-(--ui-bg-muted)">
+                        {{ serviceById.get(dep.id)?.type || dep.type }}
+                      </span>
                       <span v-if="dep.version" class="px-2 py-0.5 rounded-md text-xs bg-(--ui-bg-muted)">
                         v{{ dep.version }}
                       </span>
-                    </div>
-                    <div class="text-xs text-(--ui-text-muted) font-mono truncate">
-                      {{ dep.id }}
                     </div>
                   </div>
                   <div class="shrink-0">
@@ -682,9 +839,6 @@ onMounted(() => {
                         {{ dep.name || dep.id }}
                       </NuxtLink>
                       <span v-if="dep.type" class="px-2 py-0.5 rounded-md text-xs bg-(--ui-bg-muted)">{{ dep.type }}</span>
-                    </div>
-                    <div class="text-xs text-(--ui-text-muted) font-mono truncate">
-                      {{ dep.id }}
                     </div>
                   </div>
                 </div>

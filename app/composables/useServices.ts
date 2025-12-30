@@ -4,6 +4,9 @@ export interface ServiceDto {
   id: string
   name: string
   type?: string
+  description?: string
+  url?: string
+  tier?: number
   created?: string
   updated?: string
 }
@@ -52,12 +55,12 @@ export function useServices() {
     }
   }
 
-  async function createService(payload: { name: string; type?: string }) {
+  async function createService(payload: { name: string; type?: string; description?: string; url?: string }) {
     await client('/services', { method: 'POST', body: payload })
     await fetchServices()
   }
 
-  async function updateService(payload: { id: string, name: string }) {
+  async function updateService(payload: ServiceDto) {
     await client(`/services/${payload.id}`, { method: 'PUT', body: payload })
     await fetchServices()
   }
