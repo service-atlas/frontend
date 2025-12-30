@@ -55,7 +55,7 @@ export function useServices() {
     }
   }
 
-  async function createService(payload: { name: string; type?: string }) {
+  async function createService(payload: { name: string; type?: string; description?: string; url?: string }) {
     await client('/services', { method: 'POST', body: payload })
     await fetchServices()
   }
