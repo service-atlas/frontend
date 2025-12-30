@@ -53,6 +53,47 @@ const service = _ref<ServiceDto | null>(null)
 const loading = _ref(false)
 const error = _ref<string | null>(null)
 
+// Editing state
+const isEditing = _ref(false)
+const editName = _ref('')
+const editDescription = _ref('')
+
+function startEditing() {
+  if (!service.value) return
+  editName.value = service.value.name || ''
+  editDescription.value = service.value.description || ''
+  isEditing.value = true
+}
+
+function cancelEditing() {
+  isEditing.value = false
+  error.value = null
+}
+
+async function handleSave() {
+  if (!service.value) return
+  try {
+    loading.value = true
+    error.value = null
+    const updated = {
+      ...service.value,
+      name: editName.value.trim(),
+      description: editDescription.value.trim()
+    }
+    await updateService(updated)
+    service.value.name = updated.name
+    service.value.description = updated.description
+    isEditing.value = false
+  } catch (e: unknown) {
+    error.value = 'Failed to update service details. Please try again.'
+    if (e instanceof Error && e.message) {
+      console.error('Update service error:', e.message)
+    }
+  } finally {
+    loading.value = false
+  }
+}
+
 // Change Risk (from /reports/services/:id/change_risk)
 type ChangeRiskDto = {
   risk?: string
@@ -429,14 +470,61 @@ onMounted(() => {
             <div class="font-medium">
               Service details
             </div>
-            <span v-if="loading" class="text-(--ui-text-muted) text-sm">
-              Loading…
-            </span>
+            <div class="flex items-center gap-2">
+              <span v-if="loading" class="text-(--ui-text-muted) text-sm mr-2">
+                Loading…
+              </span>
+              <template v-if="!isEditing">
+                <UButton
+                  size="xs"
+                  icon="lucide:edit"
+                  label="Edit"
+                  color="neutral"
+                  variant="ghost"
+                  :disabled="loading"
+                  @click="startEditing"
+                />
+              </template>
+              <template v-else>
+                <UButton
+                  size="xs"
+                  label="Cancel"
+                  color="neutral"
+                  variant="ghost"
+                  @click="cancelEditing"
+                />
+                <UButton
+                  size="xs"
+                  icon="lucide:save"
+                  label="Save"
+                  :loading="loading"
+                  @click="handleSave"
+                />
+              </template>
+            </div>
           </div>
         </template>
 
         <div class="space-y-4">
           <div class="grid grid-cols-1 sm:grid-cols-3 gap-4">
+            <div v-if="isEditing" class="sm:col-span-3">
+              <UFormField label="Name">
+                <UInput v-model="editName" class="w-full" />
+              </UFormField>
+            </div>
+            <div v-if="isEditing" class="sm:col-span-3">
+              <UFormField label="Description">
+                <UTextarea v-model="editDescription" class="w-full" />
+              </UFormField>
+            </div>
+            <div v-if="!isEditing && service?.description" class="sm:col-span-3">
+              <div class="text-xs text-(--ui-text-muted)">
+                Description
+              </div>
+              <div class="text-sm whitespace-pre-wrap">
+                {{ service.description }}
+              </div>
+            </div>
             <div>
               <div class="text-xs text-(--ui-text-muted)">
                 Service ID
