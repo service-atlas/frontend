@@ -421,22 +421,6 @@ onMounted(() => {
                 {{ service?.type || '—' }}
               </div>
             </div>
-            <div>
-              <div class="text-xs text-(--ui-text-muted)">
-                Created
-              </div>
-              <div class="text-sm">
-                {{ service?.created ? new Date(service.created).toLocaleString() : '—' }}
-              </div>
-            </div>
-            <div>
-              <div class="text-xs text-(--ui-text-muted)">
-                Updated
-              </div>
-              <div class="text-sm">
-                {{ service?.updated ? new Date(service.updated).toLocaleString() : '—' }}
-              </div>
-            </div>
           </div>
 
           <div>

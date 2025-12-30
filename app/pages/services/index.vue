@@ -206,10 +206,6 @@ async function _handleDelete() {
                   {{ s.type }}
                 </UBadge>
               </div>
-              <div class="text-(--ui-text-muted) text-xs">
-                <span v-if="s.updated">Updated: {{ new Date(s.updated).toLocaleString() }}</span>
-                <span v-else-if="s.created">Created: {{ new Date(s.created).toLocaleString() }}</span>
-              </div>
             </div>
             <div class="flex items-center gap-2">
               <UButton
