@@ -57,11 +57,13 @@ const error = _ref<string | null>(null)
 const isEditing = _ref(false)
 const editName = _ref('')
 const editDescription = _ref('')
+const editUrl = _ref('')
 
 function startEditing() {
   if (!service.value) return
   editName.value = service.value.name || ''
   editDescription.value = service.value.description || ''
+  editUrl.value = service.value.url || ''
   isEditing.value = true
 }
 
@@ -78,11 +80,13 @@ async function handleSave() {
     const updated = {
       ...service.value,
       name: editName.value.trim(),
-      description: editDescription.value.trim()
+      description: editDescription.value.trim(),
+      url: editUrl.value.trim()
     }
     await updateService(updated)
     service.value.name = updated.name
     service.value.description = updated.description
+    service.value.url = updated.url
     isEditing.value = false
   } catch (e: unknown) {
     error.value = 'Failed to update service details. Please try again.'
@@ -517,12 +521,27 @@ onMounted(() => {
                 <UTextarea v-model="editDescription" class="w-full" />
               </UFormField>
             </div>
+            <div v-if="isEditing" class="sm:col-span-3">
+              <UFormField label="URL">
+                <UInput v-model="editUrl" class="w-full" placeholder="https://example.com" />
+              </UFormField>
+            </div>
             <div v-if="!isEditing && service?.description" class="sm:col-span-3">
               <div class="text-xs text-(--ui-text-muted)">
                 Description
               </div>
               <div class="text-sm whitespace-pre-wrap">
                 {{ service.description }}
+              </div>
+            </div>
+            <div v-if="!isEditing && service?.url" class="sm:col-span-3">
+              <div class="text-xs text-(--ui-text-muted)">
+                URL
+              </div>
+              <div class="text-sm">
+                <a :href="service.url" target="_blank" rel="noopener" class="underline text-(--ui-primary) break-all">
+                  {{ service.url }}
+                </a>
               </div>
             </div>
             <div>
