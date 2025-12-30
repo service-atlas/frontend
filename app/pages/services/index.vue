@@ -61,6 +61,26 @@ const searchResults = _ref<ServiceDto[]>([])
 const hasQuery = computed(() => searchQuery.value.trim().length > 0)
 const displayedServices = computed(() => hasQuery.value ? searchResults.value : services.value)
 
+const groupedServices = computed(() => {
+  const groups: Record<string, ServiceDto[]> = {}
+  for (const s of displayedServices.value) {
+    const type = s.type || 'Other'
+    if (!groups[type]) groups[type] = []
+    groups[type].push(s)
+  }
+  // Sort group names: known types first, "Other" last if it exists
+  return Object.keys(groups)
+    .sort((a, b) => {
+      if (a === 'Other') return 1
+      if (b === 'Other') return -1
+      return a.localeCompare(b)
+    })
+    .map(type => ({
+      type,
+      services: groups[type].sort((a, b) => a.name.localeCompare(b.name))
+    }))
+})
+
 async function runSearch(q: string) {
   const query = q.trim()
   if (!query) {
@@ -94,6 +114,17 @@ function refresh() {
 // Delete confirm state
 const showDelete = _ref(false)
 const toDeleteId = _ref<string | null>(null)
+
+// Collapsed groups state
+const collapsedGroups = _ref<Set<string>>(new Set())
+
+function toggleGroup(type: string) {
+  if (collapsedGroups.value.has(type)) {
+    collapsedGroups.value.delete(type)
+  } else {
+    collapsedGroups.value.add(type)
+  }
+}
 
 function confirmDelete(id: string) {
   toDeleteId.value = id
@@ -182,40 +213,59 @@ async function _handleDelete() {
 
         <div
           v-else
-          class="flex flex-col divide-y"
+          class="flex flex-col"
         >
           <div
-            v-for="s in displayedServices"
-            :key="s.id"
-            class="py-3 flex items-center justify-between gap-3"
+            v-for="group in groupedServices"
+            :key="group.type"
+            class="mb-2 last:mb-0"
           >
-            <div class="min-w-0">
-              <NuxtLink
-                class="font-medium truncate hover:underline"
-                :to="`/service/${s.id}`"
-              >
-                {{ s.name }}
-              </NuxtLink>
-              <div class="mt-0.5">
-                <UBadge
-                  v-if="s.type"
-                  color="neutral"
-                  variant="subtle"
-                  size="sm"
-                >
-                  {{ s.type }}
-                </UBadge>
+            <button
+              class="w-full flex items-center justify-between gap-2 p-2 rounded-md bg-(--ui-bg-muted) hover:bg-(--ui-border-muted) transition-colors text-left"
+              @click="toggleGroup(group.type)"
+            >
+              <div class="flex items-center gap-2">
+                <UIcon
+                  :name="collapsedGroups.has(group.type) ? 'lucide:chevron-right' : 'lucide:chevron-down'"
+                  class="w-4 h-4 text-(--ui-text-muted)"
+                />
+                <h3 class="text-sm font-semibold uppercase tracking-wider">
+                  {{ group.type }}
+                </h3>
+                <span class="text-xs text-(--ui-text-muted) px-2 py-0.5 rounded-full bg-(--ui-bg-elevated) border border-(--ui-border)">
+                  {{ group.services.length }}
+                </span>
               </div>
-            </div>
-            <div class="flex items-center gap-2">
-              <UButton
-                size="sm"
-                icon="lucide:trash"
-                color="neutral"
-                variant="ghost"
-                label="Delete"
-                @click="confirmDelete(s.id)"
-              />
+            </button>
+
+            <div
+              v-if="!collapsedGroups.has(group.type)"
+              class="flex flex-col divide-y divide-(--ui-border-muted) px-2"
+            >
+              <div
+                v-for="s in group.services"
+                :key="s.id"
+                class="py-3 flex items-center justify-between gap-3"
+              >
+                <div class="min-w-0">
+                  <NuxtLink
+                    class="font-medium truncate hover:underline"
+                    :to="`/service/${s.id}`"
+                  >
+                    {{ s.name }}
+                  </NuxtLink>
+                </div>
+                <div class="flex items-center gap-2">
+                  <UButton
+                    size="sm"
+                    icon="lucide:trash"
+                    color="neutral"
+                    variant="ghost"
+                    label="Delete"
+                    @click="confirmDelete(s.id)"
+                  />
+                </div>
+              </div>
             </div>
           </div>
         </div>
