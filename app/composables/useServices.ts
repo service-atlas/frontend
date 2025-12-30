@@ -4,6 +4,9 @@ export interface ServiceDto {
   id: string
   name: string
   type?: string
+  description?: string
+  url?: string
+  tier?: number
   created?: string
   updated?: string
 }
@@ -57,7 +60,7 @@ export function useServices() {
     await fetchServices()
   }
 
-  async function updateService(payload: { id: string, name: string }) {
+  async function updateService(payload: ServiceDto) {
     await client(`/services/${payload.id}`, { method: 'PUT', body: payload })
     await fetchServices()
   }

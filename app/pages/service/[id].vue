@@ -16,7 +16,7 @@ definePageMeta({
 const route = useRoute()
 const serviceId = computed(() => String(route.params.id || ''))
 
-const { getService, services, fetchServices } = useServices()
+const { getService, services, fetchServices, updateService } = useServices()
 const { teams, fetchTeams } = useTeams()
 const debt = useDebt()
 const releases = useReleases()
@@ -383,6 +383,34 @@ async function handleUpdateDebtStatus(item: DebtItemDto, status: DebtItemDto['st
   }
 }
 
+const tierOptions = [
+  { label: 'Tier 1', value: 1 },
+  { label: 'Tier 2', value: 2 },
+  { label: 'Tier 3', value: 3 },
+  { label: 'Tier 4', value: 4 }
+]
+
+async function handleUpdateTier(newTier: string | number) {
+  if (!service.value) return
+  const tier = typeof newTier === 'string' ? parseInt(newTier, 10) : newTier
+  try {
+    loading.value = true
+    error.value = null
+    await updateService({
+      ...service.value,
+      tier
+    })
+    service.value.tier = tier
+  } catch (e: unknown) {
+    error.value = 'Failed to update service tier. Please try again.'
+    if (e instanceof Error && e.message) {
+      console.error('Update tier error:', e.message)
+    }
+  } finally {
+    loading.value = false
+  }
+}
+
 onMounted(() => {
   loadAll()
 })
@@ -408,7 +436,7 @@ onMounted(() => {
         </template>
 
         <div class="space-y-4">
-          <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+          <div class="grid grid-cols-1 sm:grid-cols-3 gap-4">
             <div>
               <div class="text-xs text-(--ui-text-muted)">
                 Service ID
@@ -423,6 +451,21 @@ onMounted(() => {
               </div>
               <div class="text-sm">
                 {{ service?.type || '—' }}
+              </div>
+            </div>
+            <div>
+              <div class="text-xs text-(--ui-text-muted)">
+                Tier
+              </div>
+              <div class="mt-1">
+                <USelect
+                  :model-value="service?.tier"
+                  :items="tierOptions"
+                  placeholder="Select tier…"
+                  class="min-w-[150px]"
+                  :disabled="loading"
+                  @update:model-value="handleUpdateTier"
+                />
               </div>
             </div>
           </div>
@@ -476,8 +519,11 @@ onMounted(() => {
             color="error"
             variant="subtle"
             class="mt-2"
+            title="Update Error"
           >
-            {{ error }}
+            <template #description>
+              {{ error }}
+            </template>
           </UAlert>
         </div>
       </UCard>
