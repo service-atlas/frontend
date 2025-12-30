@@ -77,7 +77,7 @@ const groupedServices = computed(() => {
     })
     .map(type => ({
       type,
-      services: groups[type].sort((a, b) => a.name.localeCompare(b))
+      services: groups[type].sort((a, b) => a.name.localeCompare(b.name))
     }))
 })
 
