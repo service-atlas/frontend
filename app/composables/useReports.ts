@@ -67,11 +67,26 @@ export function useReports() {
     }
   }
 
+  async function getServicesByTier(tier: number) {
+    loading.value = true
+    error.value = null
+    try {
+      const data = await client<any>(`/reports/services/tier?tier=${tier}`, { method: 'GET' })
+      return Array.isArray(data) ? data : []
+    } catch (e: unknown) {
+      error.value = e instanceof Error ? e.message : 'Failed to load services by tier.'
+      throw e
+    } finally {
+      loading.value = false
+    }
+  }
+
   return {
     loading,
     error,
     getServiceRisk,
     getServicesByTeam,
-    getReleasesInRange
+    getReleasesInRange,
+    getServicesByTier
   }
 }
