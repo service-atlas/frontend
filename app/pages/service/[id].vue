@@ -161,12 +161,39 @@ const creatingRelease = _ref(false)
 const dependentIds = computed(() => new Set(dependencies.value.map(d => d.id)))
 const availableDependencyOptions = computed(() => {
   const currentId = serviceId.value
-  return (services.value || [])
+  const filtered = (services.value || [])
     .filter(s => s.id !== currentId && !dependentIds.value.has(s.id))
-    .map(s => ({
-      label: s.type ? `${s.name} (${s.type})` : s.name,
+    .sort((a, b) => {
+      // Primary sort by type
+      const typeA = (a.type || '').toLowerCase()
+      const typeB = (b.type || '').toLowerCase()
+      if (typeA < typeB) return -1
+      if (typeA > typeB) return 1
+      // Secondary sort by name
+      const nameA = (a.name || '').toLowerCase()
+      const nameB = (b.name || '').toLowerCase()
+      if (nameA < nameB) return -1
+      if (nameA > nameB) return 1
+      return 0
+    })
+
+  // Group by type and alphabetize within each group
+  const groups: Record<string, { label: string, value: string }[]> = {}
+  for (const s of filtered) {
+    const type = s.type || 'Other'
+    if (!groups[type]) groups[type] = []
+    groups[type].push({
+      label: s.name,
       value: s.id
-    }))
+    })
+  }
+
+  // Nuxt UI v3/v4 USelect (and native select) supports grouping via optgroup.
+  // In @nuxt/ui, you can pass an array of objects with 'label' and 'items'.
+  return Object.keys(groups).sort().map(type => ({
+    label: type.toUpperCase(),
+    items: groups[type]
+  }))
 })
 
 const serviceById = computed(() => {
@@ -774,9 +801,9 @@ onMounted(() => {
                 >
                   <div class="min-w-0">
                     <div class="flex items-center gap-2">
-                      <span class="font-medium truncate">
+                      <NuxtLink :to="`/service/${dep.id}`" class="font-medium truncate underline text-(--ui-primary)">
                         {{ serviceById.get(dep.id)?.name || dep.name || dep.id }}
-                      </span>
+                      </NuxtLink>
                       <span v-if="serviceById.get(dep.id)?.type || dep.type" class="px-2 py-0.5 rounded-md text-xs bg-(--ui-bg-muted)">
                         {{ serviceById.get(dep.id)?.type || dep.type }}
                       </span>
