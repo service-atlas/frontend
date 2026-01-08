@@ -133,7 +133,7 @@ const headerDescription = computed(() => {
 const assigned = _ref<TeamDto[]>([])
 
 // Dropdown state
-const selectedTeamId = _ref<string | null>(null)
+const selectedTeamId = _ref<{ id: string, name: string } | string | null>(null)
 
 const unassignedTeams = computed(() => {
   const assignedIds = new Set(assigned.value.map(t => t.id))
@@ -143,7 +143,7 @@ const unassignedTeams = computed(() => {
 // Dependencies state
 const dependencies = _ref<DependencyDto[]>([])
 const showAddDependency = _ref(false)
-const selectedDependencyId = _ref<string | null>(null)
+const selectedDependencyId = _ref<{ label: string, value: string } | string | null>(null)
 const selectedDependencyVersion = _ref<string>('')
 
 // Dependents state
@@ -161,12 +161,45 @@ const creatingRelease = _ref(false)
 const dependentIds = computed(() => new Set(dependencies.value.map(d => d.id)))
 const availableDependencyOptions = computed(() => {
   const currentId = serviceId.value
-  return (services.value || [])
+  const filtered = (services.value || [])
     .filter(s => s.id !== currentId && !dependentIds.value.has(s.id))
-    .map(s => ({
-      label: s.type ? `${s.name} (${s.type})` : s.name,
+    .sort((a, b) => {
+      // Primary sort by type
+      const typeA = (a.type || '').toLowerCase()
+      const typeB = (b.type || '').toLowerCase()
+      if (typeA < typeB) return -1
+      if (typeA > typeB) return 1
+      // Secondary sort by name
+      const nameA = (a.name || '').toLowerCase()
+      const nameB = (b.name || '').toLowerCase()
+      if (nameA < nameB) return -1
+      if (nameA > nameB) return 1
+      return 0
+    })
+
+  // Group by type and alphabetize within each group
+  const groups: Record<string, { label: string, value: string }[]> = {}
+  for (const s of filtered) {
+    const type = s.type || 'Other'
+    if (!groups[type]) groups[type] = []
+    groups[type].push({
+      label: s.name,
       value: s.id
+    })
+  }
+
+  // Nuxt UI v3/v4 USelectMenu supports grouping via an array of arrays.
+  return Object.keys(groups).sort().map((type) => {
+    const items = groups[type].map(item => ({
+      ...item,
+      label: item.label
     }))
+    // Add a header item for the group
+    return [
+      { label: type.toUpperCase(), type: 'label', disabled: true },
+      ...items
+    ]
+  })
 })
 
 const serviceById = computed(() => {
@@ -272,10 +305,15 @@ async function addDependency() {
   if (!serviceId.value || !selectedDependencyId.value) return
   try {
     loading.value = true
+    // Safely extract the ID string whether selectedDependencyId is an object or a string
+    const targetId = typeof selectedDependencyId.value === 'object'
+      ? selectedDependencyId.value.value
+      : selectedDependencyId.value
+
     await client(`/services/${serviceId.value}/dependency`, {
       method: 'POST',
       body: {
-        id: selectedDependencyId.value,
+        id: targetId,
         version: selectedDependencyVersion.value.trim() || undefined
       }
     })
@@ -307,8 +345,13 @@ async function addTeam() {
   if (!serviceId.value || !selectedTeamId.value) return
   try {
     loading.value = true
+    // Safely extract the ID string whether selectedTeamId is an object or a string
+    const teamId = typeof selectedTeamId.value === 'object'
+      ? (selectedTeamId.value.id || selectedTeamId.value.value)
+      : selectedTeamId.value
+
     // Backend expects PUT /teams/:teamId/services/:serviceId
-    await client(`/teams/${selectedTeamId.value}/services/${serviceId.value}`, {
+    await client(`/teams/${teamId}/services/${serviceId.value}`, {
       method: 'PUT'
     })
     selectedTeamId.value = null
@@ -774,9 +817,9 @@ onMounted(() => {
                 >
                   <div class="min-w-0">
                     <div class="flex items-center gap-2">
-                      <span class="font-medium truncate">
+                      <NuxtLink :to="`/service/${dep.id}`" class="font-medium truncate underline text-(--ui-primary)">
                         {{ serviceById.get(dep.id)?.name || dep.name || dep.id }}
-                      </span>
+                      </NuxtLink>
                       <span v-if="serviceById.get(dep.id)?.type || dep.type" class="px-2 py-0.5 rounded-md text-xs bg-(--ui-bg-muted)">
                         {{ serviceById.get(dep.id)?.type || dep.type }}
                       </span>
@@ -968,11 +1011,12 @@ onMounted(() => {
       <template #body>
         <UForm>
           <UFormField label="Service" required>
-            <USelect
+            <USelectMenu
               v-model="selectedDependencyId"
               :items="availableDependencyOptions"
               placeholder="Select a service…"
               class="min-w-[260px]"
+              value-attribute="value"
             />
           </UFormField>
           <UFormField label="Version" description="Optional">

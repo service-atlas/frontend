@@ -6,6 +6,7 @@ definePageMeta({
 const cards = [
   { title: 'Service Risk', icon: 'lucide:shield-alert', description: 'Quantifies service risk based on tech debt and dependencies.', to: '/reports/service-risk' },
   { title: 'Services by Team', icon: 'lucide:users', description: 'Select a team to list all services owned by that team.', to: '/reports/services-by-team' },
+  { title: 'Services by Tier', icon: 'lucide:layers', description: 'List all services belonging to a specific tier.', to: '/reports/services-by-tier' },
   { title: 'Releases in Date Range', icon: 'lucide:calendar-range', description: 'List all releases between two dates with pagination.', to: '/reports/releases-in-range' }
 ]
 </script>
