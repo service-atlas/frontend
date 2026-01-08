@@ -133,7 +133,7 @@ const headerDescription = computed(() => {
 const assigned = _ref<TeamDto[]>([])
 
 // Dropdown state
-const selectedTeamId = _ref<string | null>(null)
+const selectedTeamId = _ref<{ id: string, name: string } | string | null>(null)
 
 const unassignedTeams = computed(() => {
   const assignedIds = new Set(assigned.value.map(t => t.id))
@@ -143,7 +143,7 @@ const unassignedTeams = computed(() => {
 // Dependencies state
 const dependencies = _ref<DependencyDto[]>([])
 const showAddDependency = _ref(false)
-const selectedDependencyId = _ref<string | null>(null)
+const selectedDependencyId = _ref<{ label: string, value: string } | string | null>(null)
 const selectedDependencyVersion = _ref<string>('')
 
 // Dependents state
@@ -188,12 +188,18 @@ const availableDependencyOptions = computed(() => {
     })
   }
 
-  // Nuxt UI v3/v4 USelect (and native select) supports grouping via optgroup.
-  // In @nuxt/ui, you can pass an array of objects with 'label' and 'items'.
-  return Object.keys(groups).sort().map(type => ({
-    label: type.toUpperCase(),
-    items: groups[type]
-  }))
+  // Nuxt UI v3/v4 USelectMenu supports grouping via an array of arrays.
+  return Object.keys(groups).sort().map((type) => {
+    const items = groups[type].map(item => ({
+      ...item,
+      label: item.label
+    }))
+    // Add a header item for the group
+    return [
+      { label: type.toUpperCase(), type: 'label', disabled: true },
+      ...items
+    ]
+  })
 })
 
 const serviceById = computed(() => {
@@ -299,10 +305,15 @@ async function addDependency() {
   if (!serviceId.value || !selectedDependencyId.value) return
   try {
     loading.value = true
+    // Safely extract the ID string whether selectedDependencyId is an object or a string
+    const targetId = typeof selectedDependencyId.value === 'object'
+      ? selectedDependencyId.value.value
+      : selectedDependencyId.value
+
     await client(`/services/${serviceId.value}/dependency`, {
       method: 'POST',
       body: {
-        id: selectedDependencyId.value,
+        id: targetId,
         version: selectedDependencyVersion.value.trim() || undefined
       }
     })
@@ -334,8 +345,13 @@ async function addTeam() {
   if (!serviceId.value || !selectedTeamId.value) return
   try {
     loading.value = true
+    // Safely extract the ID string whether selectedTeamId is an object or a string
+    const teamId = typeof selectedTeamId.value === 'object'
+      ? (selectedTeamId.value.id || selectedTeamId.value.value)
+      : selectedTeamId.value
+
     // Backend expects PUT /teams/:teamId/services/:serviceId
-    await client(`/teams/${selectedTeamId.value}/services/${serviceId.value}`, {
+    await client(`/teams/${teamId}/services/${serviceId.value}`, {
       method: 'PUT'
     })
     selectedTeamId.value = null
@@ -995,11 +1011,12 @@ onMounted(() => {
       <template #body>
         <UForm>
           <UFormField label="Service" required>
-            <USelect
+            <USelectMenu
               v-model="selectedDependencyId"
               :items="availableDependencyOptions"
               placeholder="Select a service…"
               class="min-w-[260px]"
+              value-attribute="value"
             />
           </UFormField>
           <UFormField label="Version" description="Optional">
