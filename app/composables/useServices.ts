@@ -7,6 +7,8 @@ export interface ServiceDto {
   description?: string
   url?: string
   tier?: number
+  exposure?: 'public' | 'private' | 'mixed'
+  impact_domain?: string[]
   created?: string
   updated?: string
 }

@@ -58,12 +58,29 @@ const isEditing = _ref(false)
 const editName = _ref('')
 const editDescription = _ref('')
 const editUrl = _ref('')
+const editExposure = _ref<'public' | 'private' | 'mixed' | ''>('')
+const editImpactDomain = _ref<string[]>([])
+
+const exposureOptions = [
+  { label: 'Public', value: 'public' },
+  { label: 'Private', value: 'private' },
+  { label: 'Mixed', value: 'mixed' }
+]
+
+const impactDomainOptions = [
+  { label: 'Revenue', value: 'revenue' },
+  { label: 'Compliance', value: 'compliance' },
+  { label: 'Data', value: 'data' },
+  { label: 'Security', value: 'security' }
+]
 
 function startEditing() {
   if (!service.value) return
   editName.value = service.value.name || ''
   editDescription.value = service.value.description || ''
   editUrl.value = service.value.url || ''
+  editExposure.value = service.value.exposure || ''
+  editImpactDomain.value = [...(service.value.impact_domain || [])]
   isEditing.value = true
 }
 
@@ -81,12 +98,16 @@ async function handleSave() {
       ...service.value,
       name: editName.value.trim(),
       description: editDescription.value.trim(),
-      url: editUrl.value.trim()
+      url: editUrl.value.trim(),
+      exposure: editExposure.value || undefined,
+      impact_domain: editImpactDomain.value
     }
     await updateService(updated)
     service.value.name = updated.name
     service.value.description = updated.description
     service.value.url = updated.url
+    service.value.exposure = updated.exposure
+    service.value.impact_domain = updated.impact_domain
     isEditing.value = false
   } catch (e: unknown) {
     error.value = 'Failed to update service details. Please try again.'
@@ -569,6 +590,16 @@ onMounted(() => {
                 <UInput v-model="editUrl" class="w-full" placeholder="https://example.com" />
               </UFormField>
             </div>
+            <div v-if="isEditing" class="sm:col-span-1">
+              <UFormField label="Exposure">
+                <USelect v-model="editExposure" :items="exposureOptions" class="w-full" />
+              </UFormField>
+            </div>
+            <div v-if="isEditing" class="sm:col-span-2">
+              <UFormField label="Impact Domain">
+                <USelectMenu v-model="editImpactDomain" :items="impactDomainOptions" multiple class="w-full" />
+              </UFormField>
+            </div>
             <div v-if="!isEditing && service?.description" class="sm:col-span-3">
               <div class="text-xs text-(--ui-text-muted)">
                 Description
@@ -616,6 +647,22 @@ onMounted(() => {
                   :disabled="loading"
                   @update:model-value="handleUpdateTier"
                 />
+              </div>
+            </div>
+            <div v-if="!isEditing">
+              <div class="text-xs text-(--ui-text-muted)">
+                Exposure
+              </div>
+              <div class="text-sm capitalize">
+                {{ service?.exposure || '—' }}
+              </div>
+            </div>
+            <div v-if="!isEditing">
+              <div class="text-xs text-(--ui-text-muted)">
+                Impact Domain
+              </div>
+              <div class="text-sm">
+                {{ service?.impact_domain?.length ? service.impact_domain.join(', ') : '—' }}
               </div>
             </div>
           </div>
