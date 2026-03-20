@@ -100,7 +100,7 @@ async function handleSave() {
       description: editDescription.value.trim(),
       url: editUrl.value.trim(),
       exposure: editExposure.value || undefined,
-      impact_domain: editImpactDomain.value
+      impact_domain: editImpactDomain.value.map((val: string | { value: string }) => (typeof val === 'object' ? val.value : val))
     }
     await updateService(updated)
     service.value.name = updated.name
