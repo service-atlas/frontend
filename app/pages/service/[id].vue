@@ -16,7 +16,7 @@ definePageMeta({
 const route = useRoute()
 const serviceId = computed(() => String(route.params.id || ''))
 
-const { getService, services, fetchServices, updateService } = useServices()
+const { getService, services, fetchServices, updateService, fetchServiceTypes } = useServices()
 const { teams, fetchTeams } = useTeams()
 const debt = useDebt()
 const releases = useReleases()
@@ -56,6 +56,7 @@ const error = _ref<string | null>(null)
 // Editing state
 const isEditing = _ref(false)
 const editName = _ref('')
+const editType = _ref('')
 const editDescription = _ref('')
 const editUrl = _ref('')
 const editExposure = _ref<'public' | 'private' | 'mixed' | ''>('')
@@ -74,9 +75,15 @@ const impactDomainOptions = [
   { label: 'Security', value: 'security' }
 ]
 
+const serviceTypes = _ref<{ type: string, count: number }[]>([])
+const typeOptions = computed(() => {
+  return serviceTypes.value.map(t => ({ label: t.type, value: t.type }))
+})
+
 function startEditing() {
   if (!service.value) return
   editName.value = service.value.name || ''
+  editType.value = service.value.type || ''
   editDescription.value = service.value.description || ''
   editUrl.value = service.value.url || ''
   editExposure.value = service.value.exposure || ''
@@ -97,6 +104,7 @@ async function handleSave() {
     const updated = {
       ...service.value,
       name: editName.value.trim(),
+      type: editType.value.trim(),
       description: editDescription.value.trim(),
       url: editUrl.value.trim(),
       exposure: editExposure.value || undefined,
@@ -104,6 +112,7 @@ async function handleSave() {
     }
     await updateService(updated)
     service.value.name = updated.name
+    service.value.type = updated.type
     service.value.description = updated.description
     service.value.url = updated.url
     service.value.exposure = updated.exposure
@@ -244,7 +253,8 @@ async function loadAll() {
       fetchDependents().catch(() => undefined),
       fetchServices().catch(() => undefined),
       releases.listReleases(serviceId.value).catch(() => undefined),
-      fetchChangeRisk().catch(() => undefined)
+      fetchChangeRisk().catch(() => undefined),
+      fetchServiceTypes().then((types) => { serviceTypes.value = types }).catch(() => undefined)
     ])
     service.value = svc
   } catch (e: unknown) {
@@ -591,13 +601,34 @@ onMounted(() => {
               </UFormField>
             </div>
             <div v-if="isEditing" class="sm:col-span-1">
-              <UFormField label="Exposure">
-                <USelect v-model="editExposure" :items="exposureOptions" class="w-full" />
+              <UFormField label="Type">
+                <USelectMenu
+                  v-model="editType"
+                  :items="typeOptions"
+                  value-attribute="value"
+                  creatable
+                  class="w-full"
+                  placeholder="Select or create type…"
+                />
               </UFormField>
             </div>
-            <div v-if="isEditing" class="sm:col-span-2">
+            <div v-if="isEditing" class="sm:col-span-1">
+              <UFormField label="Exposure">
+                <USelect
+                  v-model="editExposure"
+                  :items="exposureOptions"
+                  class="w-full"
+                />
+              </UFormField>
+            </div>
+            <div v-if="isEditing" class="sm:col-span-1">
               <UFormField label="Impact Domain">
-                <USelectMenu v-model="editImpactDomain" :items="impactDomainOptions" multiple class="w-full" />
+                <USelectMenu
+                  v-model="editImpactDomain"
+                  :items="impactDomainOptions"
+                  multiple
+                  class="w-full"
+                />
               </UFormField>
             </div>
             <div v-if="!isEditing && service?.description" class="sm:col-span-3">

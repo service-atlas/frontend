@@ -72,6 +72,10 @@ export function useServices() {
     await fetchServices()
   }
 
+  async function fetchServiceTypes() {
+    return await client<{ type: string; count: number }[]>('/services/types', { method: 'GET' })
+  }
+
   return {
     services,
     loading,
@@ -81,6 +85,7 @@ export function useServices() {
     searchServices,
     createService,
     updateService,
-    deleteService
+    deleteService,
+    fetchServiceTypes
   }
 }
