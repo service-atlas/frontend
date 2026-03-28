@@ -76,8 +76,13 @@ const impactDomainOptions = [
 ]
 
 const serviceTypes = _ref<{ type: string, count: number }[]>([])
-const typeOptions = computed(() => {
-  return serviceTypes.value.map(t => ({ label: t.type, value: t.type }))
+const showTypeSuggestions = _ref(false)
+const filteredTypes = computed(() => {
+  const q = editType.value.trim().toLowerCase()
+  if (!q) return serviceTypes.value.map(t => t.type)
+  return serviceTypes.value
+    .map(t => t.type)
+    .filter(t => t.toLowerCase().includes(q))
 })
 
 function startEditing() {
@@ -601,15 +606,30 @@ onMounted(() => {
               </UFormField>
             </div>
             <div v-if="isEditing" class="sm:col-span-1">
-              <UFormField label="Type">
-                <USelectMenu
-                  v-model="editType"
-                  :items="typeOptions"
-                  value-attribute="value"
-                  creatable
-                  class="w-full"
-                  placeholder="Select or create type…"
-                />
+              <UFormField label="Type" description="Pick an existing type or enter a new one">
+                <div class="relative w-full">
+                  <UInput
+                    v-model="editType"
+                    placeholder="e.g. API, Web, Worker"
+                    class="w-full"
+                    @focus="showTypeSuggestions = true"
+                    @blur="setTimeout(() => showTypeSuggestions = false, 150)"
+                  />
+                  <div
+                    v-if="showTypeSuggestions && filteredTypes.length > 0"
+                    class="absolute z-10 mt-1 w-full rounded-md border border-(--ui-border) bg-(--ui-bg-elevated) shadow-lg max-h-56 overflow-auto"
+                  >
+                    <button
+                      v-for="t in filteredTypes"
+                      :key="t"
+                      type="button"
+                      class="w-full text-left px-3 py-2 hover:bg-(--ui-bg-muted) text-sm"
+                      @mousedown.prevent="editType = t; showTypeSuggestions = false"
+                    >
+                      {{ t }}
+                    </button>
+                  </div>
+                </div>
               </UFormField>
             </div>
             <div v-if="isEditing" class="sm:col-span-1">
