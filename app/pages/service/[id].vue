@@ -1141,6 +1141,7 @@ onMounted(() => {
             <USelectMenu
               v-model="selectedDependencyInteractionType"
               :items="interactionTypeOptions"
+              class="min-w-[200px]"
             />
           </UFormField>
         </UForm>
