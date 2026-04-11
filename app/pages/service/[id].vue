@@ -181,7 +181,7 @@ const dependencies = _ref<DependencyDto[]>([])
 const showAddDependency = _ref(false)
 const selectedDependencyId = _ref<{ label: string, value: string } | string | null>(null)
 const selectedDependencyVersion = _ref<string>('')
-const selectedDependencyInteractionType = _ref<string>('data')
+const selectedDependencyInteractionType = _ref<{ label: string, value: string } | string>('data')
 
 const interactionTypeOptions = [
   { label: 'Data', value: 'data' },
@@ -361,7 +361,9 @@ async function addDependency() {
       body: {
         id: targetId,
         version: selectedDependencyVersion.value.trim() || undefined,
-        interaction_type: selectedDependencyInteractionType.value
+        interaction_type: typeof selectedDependencyInteractionType.value === 'object'
+          ? selectedDependencyInteractionType.value.value
+          : selectedDependencyInteractionType.value
       }
     })
     selectedDependencyId.value = null
@@ -1139,7 +1141,6 @@ onMounted(() => {
             <USelectMenu
               v-model="selectedDependencyInteractionType"
               :items="interactionTypeOptions"
-              value-attribute="value"
             />
           </UFormField>
         </UForm>
