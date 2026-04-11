@@ -34,6 +34,7 @@ type DependencyDto = {
   name?: string
   type?: string
   version?: string | null
+  interaction_type?: string
 }
 
 // Dependents returned by GET /services/:id/dependents
@@ -180,6 +181,15 @@ const dependencies = _ref<DependencyDto[]>([])
 const showAddDependency = _ref(false)
 const selectedDependencyId = _ref<{ label: string, value: string } | string | null>(null)
 const selectedDependencyVersion = _ref<string>('')
+const selectedDependencyInteractionType = _ref<string>('data')
+
+const interactionTypeOptions = [
+  { label: 'Data', value: 'data' },
+  { label: 'Security', value: 'security' },
+  { label: 'Config', value: 'config' },
+  { label: 'Performance', value: 'performance' },
+  { label: 'Async', value: 'async' }
+]
 
 // Dependents state
 const dependents = _ref<DependentDto[]>([])
@@ -350,11 +360,13 @@ async function addDependency() {
       method: 'POST',
       body: {
         id: targetId,
-        version: selectedDependencyVersion.value.trim() || undefined
+        version: selectedDependencyVersion.value.trim() || undefined,
+        interaction_type: selectedDependencyInteractionType.value
       }
     })
     selectedDependencyId.value = null
     selectedDependencyVersion.value = ''
+    selectedDependencyInteractionType.value = 'data'
     showAddDependency.value = false
     await fetchDependencies()
   } catch (e: unknown) {
@@ -924,6 +936,9 @@ onMounted(() => {
                       <span v-if="dep.version" class="px-2 py-0.5 rounded-md text-xs bg-(--ui-bg-muted)">
                         v{{ dep.version }}
                       </span>
+                      <span v-if="dep.interaction_type" class="px-2 py-0.5 rounded-md text-xs bg-(--ui-bg-muted) italic">
+                        {{ dep.interaction_type }}
+                      </span>
                     </div>
                   </div>
                   <div class="shrink-0">
@@ -1119,6 +1134,13 @@ onMounted(() => {
           </UFormField>
           <UFormField label="Version" description="Optional">
             <UInput v-model="selectedDependencyVersion" placeholder="e.g. 1.5.0 (optional)" />
+          </UFormField>
+          <UFormField label="Interaction Type" required>
+            <USelectMenu
+              v-model="selectedDependencyInteractionType"
+              :items="interactionTypeOptions"
+              value-attribute="value"
+            />
           </UFormField>
         </UForm>
       </template>
