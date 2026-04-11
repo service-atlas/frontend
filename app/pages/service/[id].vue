@@ -928,18 +928,20 @@ onMounted(() => {
                   class="flex items-center justify-between gap-3 p-3 rounded-md border border-(--ui-border) bg-(--ui-bg-elevated)"
                 >
                   <div class="min-w-0">
-                    <div class="flex items-center gap-2">
+                    <div>
                       <NuxtLink :to="`/service/${dep.id}`" class="font-medium truncate underline text-(--ui-primary)">
                         {{ serviceById.get(dep.id)?.name || dep.name || dep.id }}
                       </NuxtLink>
+                    </div>
+                    <div class="flex flex-wrap items-center gap-2 mt-1">
                       <span v-if="serviceById.get(dep.id)?.type || dep.type" class="px-2 py-0.5 rounded-md text-xs bg-(--ui-bg-muted)">
-                        {{ serviceById.get(dep.id)?.type || dep.type }}
+                        Type: {{ serviceById.get(dep.id)?.type || dep.type }}
                       </span>
                       <span v-if="dep.version" class="px-2 py-0.5 rounded-md text-xs bg-(--ui-bg-muted)">
-                        v{{ dep.version }}
+                        Version: v{{ dep.version }}
                       </span>
                       <span v-if="dep.interaction_type" class="px-2 py-0.5 rounded-md text-xs bg-(--ui-bg-muted) italic">
-                        {{ dep.interaction_type }}
+                        Interaction: {{ dep.interaction_type }}
                       </span>
                     </div>
                   </div>
@@ -992,11 +994,15 @@ onMounted(() => {
                   class="flex items-center justify-between gap-3 p-3 rounded-md border border-(--ui-border) bg-(--ui-bg-elevated)"
                 >
                   <div class="min-w-0">
-                    <div class="flex items-center gap-2">
+                    <div>
                       <NuxtLink :to="`/service/${dep.id}`" class="font-medium truncate underline text-(--ui-primary)">
                         {{ dep.name || dep.id }}
                       </NuxtLink>
-                      <span v-if="dep.type" class="px-2 py-0.5 rounded-md text-xs bg-(--ui-bg-muted)">{{ dep.type }}</span>
+                    </div>
+                    <div v-if="dep.type" class="flex items-center gap-2 mt-1">
+                      <span class="px-2 py-0.5 rounded-md text-xs bg-(--ui-bg-muted)">
+                        Type: {{ dep.type }}
+                      </span>
                     </div>
                   </div>
                 </div>
