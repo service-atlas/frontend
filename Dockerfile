@@ -26,6 +26,7 @@ FROM node:24-alpine AS runtime
 WORKDIR /app
 
 ENV NODE_ENV=production
+ENV PORT=8080
 
 # The official Node image already provides a non-root user named `node`.
 # We'll use it and ensure copied files are owned by this user.
@@ -34,7 +35,7 @@ ENV NODE_ENV=production
 COPY --from=build --chown=node:node /app/.output ./.output
 
 USER node
-EXPOSE 3000
+EXPOSE 8080
 
 # Note: at runtime you can override the public runtime config using env vars:
 # - NUXT_PUBLIC_API_URL=https://api.example.com
