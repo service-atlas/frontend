@@ -111,6 +111,22 @@ docker run --rm -p 3000:3000 \
   service-atlas-frontend
 ```
 
+### Using Docker Compose
+
+1. Clone the repository
+2. Update .env file
+   ```env
+   # 'neo4j' not 'localhost' because in docker-compose we use the service name "neo4j" to connect to the database container.
+   DB_URL=neo4j://neo4j:7687 
+   DB_USERNAME=neo4j
+   DB_PASSWORD=1234%qwerT
+   ```
+3. Run
+   ```sh
+   docker-compose up -d
+   ```
+4. Open http://localhost:3000
+
 Notes:
 - The app listens on port 3000 in the container.
 - `NUXT_PUBLIC_API_URL` overrides `runtimeConfig.public.apiUrl` at runtime and is recommended for containers.
