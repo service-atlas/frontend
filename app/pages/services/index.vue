@@ -2,6 +2,8 @@
 import { ref as _ref, onMounted, computed, watch } from 'vue'
 import type { ServiceDto } from '~/composables/useServices'
 import { useServices } from '~/composables/useServices'
+import { useTeams } from '~/composables/useTeams'
+import { useReports } from '~/composables/useReports'
 
 definePageMeta({
   title: 'Services'
@@ -70,23 +72,90 @@ const searchResults = _ref<ServiceDto[]>([])
 const hasQuery = computed(() => searchQuery.value.trim().length > 0)
 const displayedServices = computed(() => hasQuery.value ? searchResults.value : services.value)
 
+// Grouping state
+const groupBy = _ref<'type' | 'tier' | 'team'>('type')
+const groupByOptions = [
+  { label: 'Type', value: 'type' },
+  { label: 'Tier', value: 'tier' },
+  { label: 'Team', value: 'team' }
+]
+
+const { teams, fetchTeams } = useTeams()
+const { getServicesByTeam } = useReports()
+const teamServicesMap = _ref<Record<string, ServiceDto[]>>({})
+const loadingTeamsData = _ref(false)
+const combinedLoading = computed(() => loading.value || (groupBy.value === 'team' && loadingTeamsData.value))
+
+async function loadTeamData(force = false) {
+  if (!force && Object.keys(teamServicesMap.value).length > 0) return
+  loadingTeamsData.value = true
+  try {
+    await fetchTeams()
+    const promises = teams.value.map(async (team) => {
+      const svcs = await getServicesByTeam(team.id)
+      return { teamName: team.name, services: svcs }
+    })
+    const results = await Promise.all(promises)
+    const map: Record<string, ServiceDto[]> = {}
+    for (const res of results) {
+      map[res.teamName] = res.services
+    }
+    teamServicesMap.value = map
+  } catch (e) {
+    console.error('Failed to load team data', e)
+  } finally {
+    loadingTeamsData.value = false
+  }
+}
+
+watch(groupBy, (val) => {
+  if (val === 'team') {
+    loadTeamData()
+  }
+})
+
 const groupedServices = computed(() => {
   const groups: Record<string, ServiceDto[]> = {}
-  for (const s of displayedServices.value) {
-    const type = s.type || 'Other'
-    if (!groups[type]) groups[type] = []
-    groups[type].push(s)
+  const key = groupBy.value
+
+  if (key === 'type') {
+    for (const s of displayedServices.value) {
+      const type = s.type || 'Other'
+      if (!groups[type]) groups[type] = []
+      groups[type].push(s)
+    }
+  } else if (key === 'tier') {
+    for (const s of displayedServices.value) {
+      const t = s.tier !== undefined ? `Tier ${s.tier}` : 'No Tier'
+      if (!groups[t]) groups[t] = []
+      groups[t].push(s)
+    }
+  } else if (key === 'team') {
+    for (const teamName in teamServicesMap.value) {
+      const svcs = teamServicesMap.value[teamName]
+      const filtered = svcs.filter(s => displayedServices.value.some(ds => ds.id === s.id))
+      if (filtered.length > 0) {
+        groups[teamName] = filtered
+      }
+    }
+    // Services not in any team
+    const allAssignedServiceIds = new Set(Object.values(teamServicesMap.value).flat().map(s => s.id))
+    const unassigned = displayedServices.value.filter(s => !allAssignedServiceIds.has(s.id))
+    if (unassigned.length > 0) {
+      groups['No Team'] = unassigned
+    }
   }
-  // Sort group names: known types first, "Other" last if it exists
+
+  // Sort group names
   return Object.keys(groups)
     .sort((a, b) => {
-      if (a === 'Other') return 1
-      if (b === 'Other') return -1
+      if (a === 'Other' || a === 'No Tier' || a === 'No Team') return 1
+      if (b === 'Other' || b === 'No Tier' || b === 'No Team') return -1
       return a.localeCompare(b)
     })
-    .map(type => ({
-      type,
-      services: groups[type].sort((a, b) => a.name.localeCompare(b.name))
+    .map(name => ({
+      type: name,
+      services: groups[name].sort((a, b) => a.name.localeCompare(b.name))
     }))
 })
 
@@ -117,6 +186,9 @@ function refresh() {
     runSearch(searchQuery.value)
   } else {
     fetchServices()
+  }
+  if (groupBy.value === 'team') {
+    loadTeamData(true)
   }
 }
 
@@ -166,6 +238,12 @@ async function _handleDelete() {
         />
 
         <div class="flex items-center gap-2">
+          <USelect
+            v-model="groupBy"
+            :items="groupByOptions"
+            icon="lucide:layers"
+            class="w-32"
+          />
           <UInput
             v-model="searchQuery"
             placeholder="Search services…"
@@ -183,7 +261,7 @@ async function _handleDelete() {
             icon="lucide:rotate-cw"
             color="neutral"
             variant="ghost"
-            :loading="loading"
+            :loading="combinedLoading"
             aria-label="Refresh"
             @click="refresh()"
           />
@@ -195,7 +273,7 @@ async function _handleDelete() {
           <div class="flex items-center justify-between">
             <span class="font-medium">Services</span>
             <span
-              v-if="loading"
+              v-if="combinedLoading"
               class="text-(--ui-text-muted) text-sm"
             >Loading…</span>
           </div>
