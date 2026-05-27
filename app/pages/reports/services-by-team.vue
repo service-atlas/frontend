@@ -22,7 +22,10 @@ onMounted(async () => {
   }
 })
 
-const teamItems = computed(() => teams.value.map((t: TeamDto) => ({ label: t.name, value: t.id })))
+const teamItems = computed(() => teams.value
+  .map((t: TeamDto) => ({ label: t.name, value: t.id }))
+  .sort((a, b) => a.label.localeCompare(b.label))
+)
 
 async function runReport() {
   error.value = null
@@ -34,7 +37,8 @@ async function runReport() {
   try {
     const data = await getServicesByTeam(selectedTeamId.value)
     // data is expected to be an array returned by the API
-    result.value = Array.isArray(data) ? data : []
+    const svcs = Array.isArray(data) ? data : []
+    result.value = svcs.sort((a: any, b: any) => (a.name || '').localeCompare(b.name || ''))
   } catch (e) {
     error.value = reportError.value || (e instanceof Error ? e.message : 'Failed to load services for team.')
   }

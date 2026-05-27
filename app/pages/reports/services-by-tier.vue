@@ -24,7 +24,8 @@ async function runReport() {
   result.value = null
   try {
     const data = await getServicesByTier(selectedTier.value)
-    result.value = Array.isArray(data) ? data : []
+    const svcs = Array.isArray(data) ? data : []
+    result.value = svcs.sort((a: any, b: any) => (a.name || '').localeCompare(b.name || ''))
   } catch (e) {
     error.value = reportError.value || (e instanceof Error ? e.message : 'Failed to load services for tier.')
   }

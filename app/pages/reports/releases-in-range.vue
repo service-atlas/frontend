@@ -38,7 +38,12 @@ async function runReport() {
   try {
     const data = await getReleasesInRange(startDate.value, endDate.value, page.value, pageSize)
     // Expecting an array
-    result.value = Array.isArray(data) ? data : []
+    const svcs = Array.isArray(data) ? data : []
+    result.value = svcs.sort((a: any, b: any) => {
+      const nameA = a.service_name || a.service_id || ''
+      const nameB = b.service_name || b.service_id || ''
+      return nameA.localeCompare(nameB)
+    })
   } catch (e) {
     error.value = reportError.value || (e instanceof Error ? e.message : 'Failed to load releases.')
   }

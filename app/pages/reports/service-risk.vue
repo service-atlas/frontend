@@ -22,7 +22,10 @@ onMounted(async () => {
   }
 })
 
-const serviceItems = computed(() => services.value.map((s: ServiceDto) => ({ label: s.name, value: s.id })))
+const serviceItems = computed(() => services.value
+  .map((s: ServiceDto) => ({ label: s.name, value: s.id }))
+  .sort((a, b) => a.label.localeCompare(b.label))
+)
 
 async function runReport() {
   error.value = null
