@@ -356,7 +356,17 @@ async function _handleDelete() {
                   </NuxtLink>
                   <div class="flex items-center gap-x-3 text-xs text-(--ui-text-muted) mt-0.5 overflow-hidden">
                     <span
-                      v-if="s.tier !== undefined"
+                      v-if="groupBy !== 'type' && s.type"
+                      class="flex items-center gap-1 flex-shrink-0"
+                    >
+                      <UIcon
+                        name="lucide:tag"
+                        class="w-3.5 h-3.5"
+                      />
+                      {{ s.type }}
+                    </span>
+                    <span
+                      v-if="groupBy !== 'tier' && s.tier !== undefined"
                       class="flex items-center gap-1 flex-shrink-0"
                     >
                       <UIcon
@@ -366,7 +376,7 @@ async function _handleDelete() {
                       Tier {{ s.tier }}
                     </span>
                     <span
-                      v-if="serviceTeamsMap[s.id]?.length"
+                      v-if="groupBy !== 'team' && serviceTeamsMap[s.id]?.length"
                       class="flex items-center gap-1 truncate"
                     >
                       <UIcon
