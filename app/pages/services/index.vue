@@ -375,6 +375,18 @@ async function _handleDelete() {
                       />
                       <span class="truncate">{{ serviceTeamsMap[s.id].join(', ') }}</span>
                     </span>
+                    <a
+                      v-if="s.url"
+                      :href="s.url"
+                      target="_blank"
+                      class="flex items-center gap-1 text-(--ui-primary) hover:underline flex-shrink-0"
+                    >
+                      <UIcon
+                        name="i-lucide-link"
+                        class="size-3.5"
+                      />
+                      External Link
+                    </a>
                   </div>
                 </div>
                 <div class="flex items-center gap-2">
