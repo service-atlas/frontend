@@ -1,11 +1,14 @@
 <script setup lang="ts">
-import { ref, computed, onMounted } from 'vue'
+import { ref, computed, onMounted, watch } from 'vue'
 import { useTeams, type TeamDto } from '~/composables/useTeams'
 import { useReports } from '~/composables/useReports'
 
 definePageMeta({
   title: 'Services by Team'
 })
+
+const route = useRoute()
+const router = useRouter()
 
 const { teams, fetchTeams, loading: loadingTeams, error: teamsError } = useTeams()
 const { getServicesByTeam, loading: loadingReport, error: reportError } = useReports()
@@ -17,9 +20,17 @@ const error = ref<string | null>(null)
 onMounted(async () => {
   try {
     await fetchTeams()
+    if (route.query.teamId) {
+      selectedTeamId.value = route.query.teamId as string
+      runReport()
+    }
   } catch {
     // error refs already set
   }
+})
+
+watch(selectedTeamId, (newId) => {
+  router.replace({ query: { ...route.query, teamId: newId || undefined } })
 })
 
 const teamItems = computed(() => teams.value

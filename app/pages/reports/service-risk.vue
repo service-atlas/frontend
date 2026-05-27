@@ -1,11 +1,14 @@
 <script setup lang="ts">
-import { ref, computed, onMounted } from 'vue'
+import { ref, computed, onMounted, watch } from 'vue'
 import { useServices, type ServiceDto } from '~/composables/useServices'
 import { useReports } from '~/composables/useReports'
 
 definePageMeta({
   title: 'Service Risk Report'
 })
+
+const route = useRoute()
+const router = useRouter()
 
 const { services, fetchServices, loading: loadingServices, error: servicesError } = useServices()
 const { getServiceRisk, loading: loadingReport, error: reportError } = useReports()
@@ -17,9 +20,17 @@ const error = ref<string | null>(null)
 onMounted(async () => {
   try {
     await fetchServices()
+    if (route.query.serviceId) {
+      selectedServiceId.value = route.query.serviceId as string
+      runReport()
+    }
   } catch {
     // error refs already set
   }
+})
+
+watch(selectedServiceId, (newId) => {
+  router.replace({ query: { ...route.query, serviceId: newId || undefined } })
 })
 
 const serviceItems = computed(() => services.value

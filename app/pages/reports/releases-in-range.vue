@@ -1,10 +1,13 @@
 <script setup lang="ts">
-import { ref, computed, watch } from 'vue'
+import { ref, computed, watch, onMounted } from 'vue'
 import { useReports } from '~/composables/useReports'
 
 definePageMeta({
   title: 'Releases in Date Range'
 })
+
+const route = useRoute()
+const router = useRouter()
 
 const { getReleasesInRange, loading, error: reportError } = useReports()
 
@@ -18,6 +21,36 @@ const pageSize = 25
 
 // API returns a flat array with snake_case fields
 const result = ref<unknown[] | null>(null)
+
+onMounted(() => {
+  let changed = false
+  if (route.query.start) {
+    startDate.value = route.query.start as string
+    changed = true
+  }
+  if (route.query.end) {
+    endDate.value = route.query.end as string
+    changed = true
+  }
+  if (route.query.page) {
+    page.value = parseInt(route.query.page as string, 10)
+    changed = true
+  }
+  if (changed) {
+    runReport()
+  }
+})
+
+watch([startDate, endDate, page], ([s, e, p]) => {
+  router.replace({
+    query: {
+      ...route.query,
+      start: s || undefined,
+      end: e || undefined,
+      page: p > 1 ? p.toString() : undefined
+    }
+  })
+})
 
 const hasResult = computed(() => Array.isArray(result.value))
 

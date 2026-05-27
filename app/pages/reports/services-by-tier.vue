@@ -1,16 +1,30 @@
 <script setup lang="ts">
-import { ref } from 'vue'
+import { ref, onMounted, watch } from 'vue'
 import { useReports } from '~/composables/useReports'
 
 definePageMeta({
   title: 'Services by Tier'
 })
 
+const route = useRoute()
+const router = useRouter()
+
 const { getServicesByTier, loading, error: reportError } = useReports()
 
 const selectedTier = ref<number>(1)
 const result = ref<unknown[] | null>(null)
 const error = ref<string | null>(null)
+
+onMounted(() => {
+  if (route.query.tier) {
+    selectedTier.value = parseInt(route.query.tier as string, 10)
+    runReport()
+  }
+})
+
+watch(selectedTier, (newTier) => {
+  router.replace({ query: { ...route.query, tier: newTier?.toString() } })
+})
 
 const tierOptions = [
   { label: 'Tier 1', value: 1 },
