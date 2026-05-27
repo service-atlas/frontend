@@ -21,6 +21,7 @@ const {
 
 onMounted(() => {
   fetchServices()
+  loadTeamData()
 })
 
 // Create modal state
@@ -85,6 +86,18 @@ const { getServicesByTeam } = useReports()
 const teamServicesMap = _ref<Record<string, ServiceDto[]>>({})
 const loadingTeamsData = _ref(false)
 const combinedLoading = computed(() => loading.value || (groupBy.value === 'team' && loadingTeamsData.value))
+
+const serviceTeamsMap = computed(() => {
+  const map: Record<string, string[]> = {}
+  const sortedTeamNames = Object.keys(teamServicesMap.value).sort()
+  for (const teamName of sortedTeamNames) {
+    for (const s of teamServicesMap.value[teamName]) {
+      if (!map[s.id]) map[s.id] = []
+      map[s.id].push(teamName)
+    }
+  }
+  return map
+})
 
 async function loadTeamData(force = false) {
   if (!force && Object.keys(teamServicesMap.value).length > 0) return
@@ -336,11 +349,33 @@ async function _handleDelete() {
               >
                 <div class="min-w-0">
                   <NuxtLink
-                    class="font-medium truncate hover:underline"
+                    class="font-medium truncate hover:underline block"
                     :to="`/service/${s.id}`"
                   >
                     {{ s.name }}
                   </NuxtLink>
+                  <div class="flex items-center gap-x-3 text-xs text-(--ui-text-muted) mt-0.5 overflow-hidden">
+                    <span
+                      v-if="s.tier !== undefined"
+                      class="flex items-center gap-1 flex-shrink-0"
+                    >
+                      <UIcon
+                        name="lucide:layers"
+                        class="w-3.5 h-3.5"
+                      />
+                      Tier {{ s.tier }}
+                    </span>
+                    <span
+                      v-if="serviceTeamsMap[s.id]?.length"
+                      class="flex items-center gap-1 truncate"
+                    >
+                      <UIcon
+                        name="lucide:users"
+                        class="w-3.5 h-3.5 flex-shrink-0"
+                      />
+                      <span class="truncate">{{ serviceTeamsMap[s.id].join(', ') }}</span>
+                    </span>
+                  </div>
                 </div>
                 <div class="flex items-center gap-2">
                   <UButton
