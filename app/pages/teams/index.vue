@@ -17,6 +17,8 @@ const {
   deleteTeam
 } = useTeams()
 
+const sortedTeams = computed(() => [...teams.value].sort((a, b) => a.name.localeCompare(b.name)))
+
 onMounted(() => {
   fetchTeams()
 })
@@ -126,7 +128,7 @@ async function _handleDelete() {
           class="flex flex-col divide-y"
         >
           <div
-            v-for="t in teams"
+            v-for="t in sortedTeams"
             :key="t.id"
             class="py-3 flex items-center justify-between gap-3"
           >

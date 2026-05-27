@@ -1,11 +1,14 @@
 <script setup lang="ts">
-import { ref, computed, onMounted } from 'vue'
+import { ref, computed, onMounted, watch } from 'vue'
 import { useTeams, type TeamDto } from '~/composables/useTeams'
 import { useReports } from '~/composables/useReports'
 
 definePageMeta({
   title: 'Services by Team'
 })
+
+const route = useRoute()
+const router = useRouter()
 
 const { teams, fetchTeams, loading: loadingTeams, error: teamsError } = useTeams()
 const { getServicesByTeam, loading: loadingReport, error: reportError } = useReports()
@@ -17,12 +20,23 @@ const error = ref<string | null>(null)
 onMounted(async () => {
   try {
     await fetchTeams()
+    if (route.query.teamId) {
+      selectedTeamId.value = route.query.teamId as string
+      runReport()
+    }
   } catch {
     // error refs already set
   }
 })
 
-const teamItems = computed(() => teams.value.map((t: TeamDto) => ({ label: t.name, value: t.id })))
+watch(selectedTeamId, (newId) => {
+  router.replace({ query: { ...route.query, teamId: newId || undefined } })
+})
+
+const teamItems = computed(() => teams.value
+  .map((t: TeamDto) => ({ label: t.name, value: t.id }))
+  .sort((a, b) => a.label.localeCompare(b.label))
+)
 
 async function runReport() {
   error.value = null
@@ -34,7 +48,8 @@ async function runReport() {
   try {
     const data = await getServicesByTeam(selectedTeamId.value)
     // data is expected to be an array returned by the API
-    result.value = Array.isArray(data) ? data : []
+    const svcs = Array.isArray(data) ? data : []
+    result.value = svcs.sort((a: any, b: any) => (a.name || '').localeCompare(b.name || ''))
   } catch (e) {
     error.value = reportError.value || (e instanceof Error ? e.message : 'Failed to load services for team.')
   }
@@ -104,7 +119,7 @@ const isLoading = computed(() => loadingTeams.value || loadingReport.value)
         <div v-if="Array.isArray(result) && result.length > 0">
           <ul class="divide-y divide-(--ui-border)">
             <li v-for="svc in result" :key="svc.id" class="py-2">
-              <NuxtLink :to="`/service/${svc.id}`" class="text-(--ui-primary) hover:underline">
+              <NuxtLink :to="`/service/${svc.id}`" target="_blank" class="text-(--ui-primary) hover:underline">
                 {{ svc.name || svc.id }}
               </NuxtLink>
               <div v-if="svc.type" class="text-(--ui-text-muted) text-xs mt-0.5">

@@ -173,7 +173,9 @@ const selectedTeamId = _ref<{ id: string, name: string } | string | null>(null)
 
 const unassignedTeams = computed(() => {
   const assignedIds = new Set(assigned.value.map(t => t.id))
-  return teams.value.filter(t => !assignedIds.has(t.id))
+  return teams.value
+    .filter(t => !assignedIds.has(t.id))
+    .sort((a, b) => a.name.localeCompare(b.name))
 })
 
 // Dependencies state
@@ -282,7 +284,8 @@ async function loadAll() {
 async function fetchAssignedTeams() {
   if (!serviceId.value) return
   const data = await client<TeamDto[]>(`/services/${serviceId.value}/teams`, { method: 'GET' })
-  assigned.value = Array.isArray(data) ? data : []
+  const teamList = Array.isArray(data) ? data : []
+  assigned.value = teamList.sort((a, b) => a.name.localeCompare(b.name))
 }
 
 function openAddRelease() {
@@ -338,13 +341,15 @@ async function _handleCreateRelease() {
 async function fetchDependencies() {
   if (!serviceId.value) return
   const data = await client<DependencyDto[]>(`/services/${serviceId.value}/dependencies`, { method: 'GET' })
-  dependencies.value = Array.isArray(data) ? data : []
+  const deps = Array.isArray(data) ? data : []
+  dependencies.value = deps.sort((a, b) => (a.name || '').localeCompare(b.name || ''))
 }
 
 async function fetchDependents() {
   if (!serviceId.value) return
   const data = await client<DependentDto[]>(`/services/${serviceId.value}/dependents`, { method: 'GET' })
-  dependents.value = Array.isArray(data) ? data : []
+  const deps = Array.isArray(data) ? data : []
+  dependents.value = deps.sort((a, b) => (a.name || '').localeCompare(b.name || ''))
 }
 
 async function addDependency() {
