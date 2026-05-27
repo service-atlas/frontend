@@ -158,7 +158,7 @@ function prevPage() {
                   {{ r.release_date }}
                 </td>
                 <td class="py-2 px-3 border-b border-(--ui-border)">
-                  <NuxtLink :to="`/service/${r.service_id}`" class="text-(--ui-primary) hover:underline">
+                  <NuxtLink :to="`/service/${r.service_id}`" target="_blank" class="text-(--ui-primary) hover:underline">
                     {{ r.service_name || r.service_id }}
                   </NuxtLink>
                   <div v-if="r.service_type" class="text-(--ui-text-muted) text-xs mt-0.5">

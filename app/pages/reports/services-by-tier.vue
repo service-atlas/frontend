@@ -83,7 +83,7 @@ async function runReport() {
         <div v-if="Array.isArray(result) && result.length > 0">
           <ul class="divide-y divide-(--ui-border)">
             <li v-for="svc in (result as any[])" :key="svc.id" class="py-2">
-              <NuxtLink :to="`/service/${svc.id}`" class="text-(--ui-primary) hover:underline">
+              <NuxtLink :to="`/service/${svc.id}`" target="_blank" class="text-(--ui-primary) hover:underline">
                 {{ svc.name || svc.id }}
               </NuxtLink>
               <div v-if="svc.type || svc.description" class="text-(--ui-text-muted) text-xs mt-0.5">
