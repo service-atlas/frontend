@@ -16,7 +16,15 @@ export default defineNuxtConfig({
   runtimeConfig: {
     public: {
       // Base URL for backend API
-      apiUrl: process.env.API_URL || 'http://localhost:8080'
+      apiUrl: process.env.API_URL || 'http://localhost:8080',
+      oidc: {
+        issuer: process.env.NUXT_PUBLIC_OIDC_ISSUER || '',
+        clientId: process.env.NUXT_PUBLIC_OIDC_CLIENT_ID || '',
+        redirectUri: process.env.NUXT_PUBLIC_OIDC_REDIRECT_URI || '',
+        scopes: process.env.NUXT_PUBLIC_OIDC_SCOPES || 'openid profile email',
+        audience: process.env.NUXT_PUBLIC_OIDC_AUDIENCE || '',
+        authEnabled: !!(process.env.NUXT_PUBLIC_OIDC_ISSUER && process.env.NUXT_PUBLIC_OIDC_CLIENT_ID)
+      }
     }
   },
 
