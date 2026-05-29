@@ -29,9 +29,9 @@ const navItems = [
   { label: 'Services', to: '/services' }
 ]
 
-const { isAuthEnabled } = useAuth()
+const { enabled: isAuthEnabled, isAuthenticated, user, login, logout } = useAuth()
 
-if (isAuthEnabled.value) {
+if (isAuthEnabled) {
   console.info('OIDC Authentication is enabled')
 }
 
@@ -75,6 +75,29 @@ const isActive = (to: string) => {
 
       <template #right>
         <UColorModeButton />
+
+        <template v-if="isAuthEnabled">
+          <UButton
+            v-if="!isAuthenticated"
+            label="Login"
+            color="neutral"
+            variant="ghost"
+            @click="login"
+          />
+          <UDropdownMenu
+            v-else
+            :items="[
+              [{ label: user?.name || user?.email || 'User', disabled: true }],
+              [{ label: 'Logout', icon: 'i-lucide-log-out', onSelect: () => logout() }]
+            ]"
+          >
+            <UButton
+              icon="i-lucide-user"
+              color="neutral"
+              variant="ghost"
+            />
+          </UDropdownMenu>
+        </template>
 
         <UButton
           to="https://github.com/service-atlas"
