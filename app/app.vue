@@ -29,6 +29,12 @@ const navItems = [
   { label: 'Services', to: '/services' }
 ]
 
+const { isAuthEnabled } = useAuth()
+
+if (isAuthEnabled.value) {
+  console.info('OIDC Authentication is enabled')
+}
+
 const isActive = (to: string) => {
   // consider the route active if it starts with the target path
   return route.path === to || route.path.startsWith(to + '/')
