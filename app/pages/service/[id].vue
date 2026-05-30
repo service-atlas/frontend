@@ -20,12 +20,7 @@ const { getService, services, fetchServices, updateService, fetchServiceTypes } 
 const { teams, fetchTeams } = useTeams()
 const debt = useDebt()
 const releases = useReleases()
-
-const config = useRuntimeConfig()
-// In development, route through Nuxt dev proxy at /api to avoid CORS.
-// In production, use the configured absolute API URL, falling back to /api if missing.
-const baseURL = (import.meta.dev ? '/api' : (config.public?.apiUrl as string) || '/api')
-const client = $fetch.create({ baseURL })
+const apiFetch = useApi()
 
 type ServiceDto = Awaited<ReturnType<typeof getService>>
 
@@ -146,7 +141,7 @@ async function fetchChangeRisk() {
   if (!serviceId.value) return
   changeRiskLoading.value = true
   try {
-    const data = await client<ChangeRiskDto>(`/reports/services/${serviceId.value}/change_risk`, { method: 'GET' })
+    const data = await apiFetch<ChangeRiskDto>(`/reports/services/${serviceId.value}/change_risk`, { method: 'GET' })
     changeRisk.value = data || null
   } catch {
     // Silent fail: leave changeRisk null so UI shows "unknown"
@@ -283,7 +278,7 @@ async function loadAll() {
 
 async function fetchAssignedTeams() {
   if (!serviceId.value) return
-  const data = await client<TeamDto[]>(`/services/${serviceId.value}/teams`, { method: 'GET' })
+  const data = await apiFetch<TeamDto[]>(`/services/${serviceId.value}/teams`, { method: 'GET' })
   const teamList = Array.isArray(data) ? data : []
   assigned.value = teamList.sort((a, b) => a.name.localeCompare(b.name))
 }
@@ -340,14 +335,14 @@ async function _handleCreateRelease() {
 
 async function fetchDependencies() {
   if (!serviceId.value) return
-  const data = await client<DependencyDto[]>(`/services/${serviceId.value}/dependencies`, { method: 'GET' })
+  const data = await apiFetch<DependencyDto[]>(`/services/${serviceId.value}/dependencies`, { method: 'GET' })
   const deps = Array.isArray(data) ? data : []
   dependencies.value = deps.sort((a, b) => (a.name || '').localeCompare(b.name || ''))
 }
 
 async function fetchDependents() {
   if (!serviceId.value) return
-  const data = await client<DependentDto[]>(`/services/${serviceId.value}/dependents`, { method: 'GET' })
+  const data = await apiFetch<DependentDto[]>(`/services/${serviceId.value}/dependents`, { method: 'GET' })
   const deps = Array.isArray(data) ? data : []
   dependents.value = deps.sort((a, b) => (a.name || '').localeCompare(b.name || ''))
 }
@@ -361,7 +356,7 @@ async function addDependency() {
       ? selectedDependencyId.value.value
       : selectedDependencyId.value
 
-    await client(`/services/${serviceId.value}/dependency`, {
+    await apiFetch(`/services/${serviceId.value}/dependency`, {
       method: 'POST',
       body: {
         id: targetId,
@@ -387,7 +382,7 @@ async function removeDependency(targetId: string) {
   if (!serviceId.value) return
   try {
     loading.value = true
-    await client(`/services/${serviceId.value}/dependency/${targetId}`, { method: 'DELETE' })
+    await apiFetch(`/services/${serviceId.value}/dependency/${targetId}`, { method: 'DELETE' })
     await fetchDependencies()
   } catch (e: unknown) {
     error.value = e instanceof Error ? e.message : 'Failed to remove dependency.'
@@ -406,7 +401,7 @@ async function addTeam() {
       : selectedTeamId.value
 
     // Backend expects PUT /teams/:teamId/services/:serviceId
-    await client(`/teams/${teamId}/services/${serviceId.value}`, {
+    await apiFetch(`/teams/${teamId}/services/${serviceId.value}`, {
       method: 'PUT'
     })
     selectedTeamId.value = null
@@ -423,7 +418,7 @@ async function removeTeam(teamId: string) {
   try {
     loading.value = true
     // Backend expects DELETE /teams/:teamId/services/:serviceId
-    await client(`/teams/${teamId}/services/${serviceId.value}`, { method: 'DELETE' })
+    await apiFetch(`/teams/${teamId}/services/${serviceId.value}`, { method: 'DELETE' })
     await fetchAssignedTeams()
   } catch (e: unknown) {
     error.value = e instanceof Error ? e.message : 'Failed to remove team.'

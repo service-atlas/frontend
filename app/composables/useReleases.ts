@@ -8,9 +8,7 @@ export interface ReleaseDto {
 }
 
 export function useReleases() {
-  const config = useRuntimeConfig()
-  const baseURL = (import.meta.dev ? '/api' : (config.public?.apiUrl as string) || '/api')
-  const client = $fetch.create({ baseURL })
+  const apiFetch = useApi()
 
   const items = ref<ReleaseDto[]>([])
   const loading = ref(false)
@@ -20,7 +18,7 @@ export function useReleases() {
     loading.value = true
     error.value = null
     try {
-      const data = await client<ReleaseDto[]>(`/services/${serviceId}/release`, { method: 'GET' })
+      const data = await apiFetch<ReleaseDto[]>(`/services/${serviceId}/release`, { method: 'GET' })
       items.value = Array.isArray(data) ? data : []
     } catch (e: unknown) {
       const anyErr = e as unknown as {
@@ -77,7 +75,7 @@ export function useReleases() {
     }
   ) {
     // Backend will default release_date to current UTC if not provided.
-    await client(`/services/${serviceId}/release`, { method: 'POST', body: payload })
+    await apiFetch(`/services/${serviceId}/release`, { method: 'POST', body: payload })
     await listReleases(serviceId)
   }
 

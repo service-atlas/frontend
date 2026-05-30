@@ -1,9 +1,7 @@
 import { ref } from 'vue'
 
 export function useReports() {
-  const config = useRuntimeConfig()
-  const baseURL = (import.meta.dev ? '/api' : (config.public?.apiUrl as string) || '/api')
-  const client = $fetch.create({ baseURL })
+  const apiFetch = useApi()
 
   const loading = ref(false)
   const error = ref<string | null>(null)
@@ -13,7 +11,7 @@ export function useReports() {
     error.value = null
     try {
       // Return exactly what the API sends (camelCase expected)
-      const data = await client<any>(`/reports/services/${serviceId}/risk`, { method: 'GET' })
+      const data = await apiFetch<any>(`/reports/services/${serviceId}/risk`, { method: 'GET' })
       return data
     } catch (e: unknown) {
       const anyErr = e as any
@@ -32,7 +30,7 @@ export function useReports() {
     error.value = null
     try {
       // Return payload exactly as provided by the API (array of services)
-      const data = await client<any>(`/teams/${teamId}/services`, { method: 'GET' })
+      const data = await apiFetch<any>(`/teams/${teamId}/services`, { method: 'GET' })
       return Array.isArray(data) ? data : []
     } catch (e: unknown) {
       const anyErr = e as any
@@ -57,7 +55,7 @@ export function useReports() {
         page: String(page ?? 1),
         pageSize: String(pageSize ?? 25)
       })
-      const data = await client<any>(`/releases/${startDate}/${endDate}?${query.toString()}`, { method: 'GET' })
+      const data = await apiFetch<any>(`/releases/${startDate}/${endDate}?${query.toString()}`, { method: 'GET' })
       return Array.isArray(data) ? data : []
     } catch (e: unknown) {
       error.value = e instanceof Error ? e.message : 'Failed to load releases.'
@@ -71,7 +69,7 @@ export function useReports() {
     loading.value = true
     error.value = null
     try {
-      const data = await client<any>(`/reports/services/tier?tier=${tier}`, { method: 'GET' })
+      const data = await apiFetch<any>(`/reports/services/tier?tier=${tier}`, { method: 'GET' })
       return Array.isArray(data) ? data : []
     } catch (e: unknown) {
       error.value = e instanceof Error ? e.message : 'Failed to load services by tier.'
