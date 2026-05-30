@@ -12,10 +12,8 @@ export const useApi = () => {
       if (authEnabled) {
         const token = await getAccessToken()
         if (token) {
-          options.headers = {
-            ...options.headers,
-            Authorization: `Bearer ${token}`
-          }
+          options.headers = new Headers(options.headers)
+          options.headers.set('Authorization', `Bearer ${token}`)
         }
       }
     },

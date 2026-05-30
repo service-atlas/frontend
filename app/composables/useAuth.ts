@@ -17,7 +17,6 @@ export interface AuthClient {
 }
 
 export const useAuth = (): AuthClient => {
-  const { $userManager } = useNuxtApp()
   const config = useRuntimeConfig()
   const oidcConfig = config.public.oidc
 
@@ -34,24 +33,69 @@ export const useAuth = (): AuthClient => {
     return null
   })
 
-  const userManager = $userManager as UserManager | null
 
   const login = async (url?: string) => {
-    if (!enabled || !userManager) return
-    await userManager.signinRedirect({
-      state: url
-    })
+    console.log('useAuth: login called', { url, enabled })
+    if (!enabled) {
+      console.warn('Login attempted but OIDC is disabled')
+      return
+    }
+
+    if (!import.meta.client) {
+      console.warn('Login attempted on server-side, skipping')
+      return
+    }
+
+    const nuxtApp = useNuxtApp()
+    const activeUserManager = (nuxtApp.$userManager || (nuxtApp as any).userManager) as UserManager | undefined
+
+    console.log('useAuth: activeUserManager from nuxtApp', !!activeUserManager)
+    if (!activeUserManager) {
+      console.error('Login attempted but UserManager is not available in nuxtApp')
+      console.log('Available nuxtApp keys:', Object.keys(nuxtApp).filter(k => k.startsWith('$') || k === 'userManager'))
+      console.log('Is client:', import.meta.client)
+      // Remove logging nuxtApp directly as it might be too large
+      return
+    }
+
+    try {
+      console.log('useAuth: calling signinRedirect')
+      await activeUserManager.signinRedirect({
+        state: url
+      })
+    } catch (err) {
+      console.error('useAuth: signinRedirect failed', err)
+    }
   }
 
   const logout = async () => {
-    if (!enabled || !userManager) return
-    await userManager.signoutRedirect()
+    if (!enabled || !import.meta.client) return
+    const nuxtApp = useNuxtApp()
+    const activeUserManager = (nuxtApp.$userManager || (nuxtApp as any).userManager) as UserManager | undefined
+
+    if (!activeUserManager) {
+      console.error('Logout attempted but UserManager is not available')
+      return
+    }
+    await activeUserManager.signoutRedirect()
   }
 
   const handleCallback = async () => {
-    if (!enabled || !userManager) return
+    console.log('useAuth: handleCallback called')
+    if (!enabled || !import.meta.client) return
+    const nuxtApp = useNuxtApp()
+    const activeUserManager = (nuxtApp.$userManager || (nuxtApp as any).userManager) as UserManager | undefined
+
+    console.log('useAuth: handleCallback activeUserManager', !!activeUserManager)
+
+    if (!activeUserManager) {
+      console.error('Callback handled but UserManager is not available')
+      return
+    }
     try {
-      const oidcUser = await userManager.signinRedirectCallback()
+      console.log('useAuth: calling signinRedirectCallback')
+      const oidcUser = await activeUserManager.signinRedirectCallback()
+      console.log('useAuth: signinRedirectCallback success', oidcUser.profile.sub)
       isAuthenticated.value = true
       user.value = {
         sub: oidcUser.profile.sub,
@@ -66,10 +110,13 @@ export const useAuth = (): AuthClient => {
   }
 
   const getAccessToken = async (): Promise<string | null> => {
-    if (!enabled) return null
-    if (!userManager) return null
+    if (!enabled || !import.meta.client) return null
+    const nuxtApp = useNuxtApp()
+    const activeUserManager = (nuxtApp.$userManager || (nuxtApp as any).userManager) as UserManager | undefined
 
-    const oidcUser = await userManager.getUser()
+    if (!activeUserManager) return null
+
+    const oidcUser = await activeUserManager.getUser()
     return oidcUser?.access_token || null
   }
 

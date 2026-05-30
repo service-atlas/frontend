@@ -28,6 +28,13 @@ export default defineNuxtConfig({
     }
   },
 
+  // Add debugging for runtime config
+  hooks: {
+    'ready': (nuxt) => {
+      console.log('Nuxt config ready. OIDC enabled:', nuxt.options.runtimeConfig.public.oidc.authEnabled)
+    }
+  },
+
   routeRules: {},
 
   compatibilityDate: '2025-01-15',

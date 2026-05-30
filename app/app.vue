@@ -31,6 +31,11 @@ const navItems = [
 
 const { enabled: isAuthEnabled, isAuthenticated, user, login, logout } = useAuth()
 
+function handleLogin() {
+  console.log('App.vue: handleLogin called')
+  login()
+}
+
 if (isAuthEnabled) {
   console.info('OIDC Authentication is enabled')
 }
@@ -82,13 +87,13 @@ const isActive = (to: string) => {
             label="Login"
             color="neutral"
             variant="ghost"
-            @click="login"
+            @click="handleLogin"
           />
           <UDropdownMenu
             v-else
             :items="[
               [{ label: user?.name || user?.email || 'User', disabled: true }],
-              [{ label: 'Logout', icon: 'i-lucide-log-out', onSelect: () => logout() }]
+              [{ label: 'Logout', icon: 'i-lucide-log-out', onSelect: logout }]
             ]"
           >
             <UButton
