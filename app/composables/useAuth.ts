@@ -1,4 +1,4 @@
-import { UserManager, type UserManagerSettings } from 'oidc-client-ts'
+import { type UserManager } from 'oidc-client-ts'
 
 export interface AuthUser {
   sub: string
@@ -17,6 +17,7 @@ export interface AuthClient {
 }
 
 export const useAuth = (): AuthClient => {
+  const { $userManager } = useNuxtApp()
   const config = useRuntimeConfig()
   const oidcConfig = config.public.oidc
 
@@ -33,56 +34,7 @@ export const useAuth = (): AuthClient => {
     return null
   })
 
-  let userManager: UserManager | null = null
-
-  if (enabled && import.meta.client) {
-    const settings: UserManagerSettings = {
-      authority: oidcConfig.issuer,
-      client_id: oidcConfig.clientId,
-      redirect_uri: oidcConfig.redirectUri,
-      response_type: 'code',
-      scope: oidcConfig.scopes,
-      loadUserInfo: true,
-      automaticSilentRenew: true
-    }
-
-    if (oidcConfig.audience) {
-      settings.extraQueryParams = {
-        audience: oidcConfig.audience
-      }
-    }
-
-    userManager = new UserManager(settings)
-
-    // Sync state with user manager
-    userManager.getUser().then((oidcUser) => {
-      if (oidcUser && !oidcUser.expired) {
-        isAuthenticated.value = true
-        user.value = {
-          sub: oidcUser.profile.sub,
-          name: oidcUser.profile.name,
-          email: oidcUser.profile.email
-        }
-      } else {
-        isAuthenticated.value = false
-        user.value = null
-      }
-    })
-
-    userManager.events.addUserLoaded((oidcUser) => {
-      isAuthenticated.value = true
-      user.value = {
-        sub: oidcUser.profile.sub,
-        name: oidcUser.profile.name,
-        email: oidcUser.profile.email
-      }
-    })
-
-    userManager.events.addUserUnloaded(() => {
-      isAuthenticated.value = false
-      user.value = null
-    })
-  }
+  const userManager = $userManager as UserManager | null
 
   const login = async () => {
     if (!enabled || !userManager) return
