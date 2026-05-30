@@ -4,8 +4,8 @@ const router = useRouter()
 
 onMounted(async () => {
   try {
-    await handleCallback()
-    router.push('/')
+    const targetPath = await handleCallback()
+    router.push(targetPath || '/')
   } catch (error) {
     console.error('Failed to handle auth callback', error)
     // In a real app, you might want to redirect to an error page or back to login

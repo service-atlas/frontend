@@ -10,9 +10,9 @@ export interface AuthClient {
   enabled: boolean
   isAuthenticated: Ref<boolean>
   user: Ref<AuthUser | null>
-  login: () => Promise<void>
+  login: (url?: string) => Promise<void>
   logout: () => Promise<void>
-  handleCallback: () => Promise<void>
+  handleCallback: () => Promise<string | undefined>
   getAccessToken: () => Promise<string | null>
 }
 
@@ -36,9 +36,11 @@ export const useAuth = (): AuthClient => {
 
   const userManager = $userManager as UserManager | null
 
-  const login = async () => {
+  const login = async (url?: string) => {
     if (!enabled || !userManager) return
-    await userManager.signinRedirect()
+    await userManager.signinRedirect({
+      state: url
+    })
   }
 
   const logout = async () => {
@@ -56,6 +58,7 @@ export const useAuth = (): AuthClient => {
         name: oidcUser.profile.name,
         email: oidcUser.profile.email
       }
+      return oidcUser.state as string | undefined
     } catch (error) {
       console.error('OIDC callback error:', error)
       throw error
