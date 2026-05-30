@@ -1,6 +1,5 @@
 export const useApi = () => {
   const config = useRuntimeConfig()
-  const { getAccessToken, enabled: authEnabled } = useAuth()
 
   // In development, route through Nuxt dev proxy at /api to avoid CORS.
   // In production, use the configured absolute API URL, falling back to /api if missing.
@@ -8,15 +7,6 @@ export const useApi = () => {
 
   const apiFetch = $fetch.create({
     baseURL,
-    async onRequest({ options }) {
-      if (authEnabled) {
-        const token = await getAccessToken()
-        if (token) {
-          options.headers = new Headers(options.headers)
-          options.headers.set('Authorization', `Bearer ${token}`)
-        }
-      }
-    },
     async onResponseError({ response }) {
       if (response.status === 401) {
         // Future: Handle session expiration/refresh

@@ -13,7 +13,6 @@ export interface AuthClient {
   login: (url?: string) => Promise<void>
   logout: () => Promise<void>
   handleCallback: () => Promise<string | undefined>
-  getAccessToken: () => Promise<string | null>
 }
 
 export const useAuth = (): AuthClient => {
@@ -46,15 +45,10 @@ export const useAuth = (): AuthClient => {
       return
     }
 
-    const nuxtApp = useNuxtApp()
-    const activeUserManager = (nuxtApp.$userManager || (nuxtApp as any).userManager) as UserManager | undefined
-
-    console.log('useAuth: activeUserManager from nuxtApp', !!activeUserManager)
+    const activeUserManager = useNuxtApp().$userManager as UserManager | undefined
     if (!activeUserManager) {
       console.error('Login attempted but UserManager is not available in nuxtApp')
-      console.log('Available nuxtApp keys:', Object.keys(nuxtApp).filter(k => k.startsWith('$') || k === 'userManager'))
       console.log('Is client:', import.meta.client)
-      // Remove logging nuxtApp directly as it might be too large
       return
     }
 
@@ -70,8 +64,7 @@ export const useAuth = (): AuthClient => {
 
   const logout = async () => {
     if (!enabled || !import.meta.client) return
-    const nuxtApp = useNuxtApp()
-    const activeUserManager = (nuxtApp.$userManager || (nuxtApp as any).userManager) as UserManager | undefined
+    const activeUserManager = useNuxtApp().$userManager as UserManager | undefined
 
     if (!activeUserManager) {
       console.error('Logout attempted but UserManager is not available')
@@ -83,8 +76,7 @@ export const useAuth = (): AuthClient => {
   const handleCallback = async () => {
     console.log('useAuth: handleCallback called')
     if (!enabled || !import.meta.client) return
-    const nuxtApp = useNuxtApp()
-    const activeUserManager = (nuxtApp.$userManager || (nuxtApp as any).userManager) as UserManager | undefined
+    const activeUserManager = useNuxtApp().$userManager as UserManager | undefined
 
     console.log('useAuth: handleCallback activeUserManager', !!activeUserManager)
 
@@ -109,24 +101,12 @@ export const useAuth = (): AuthClient => {
     }
   }
 
-  const getAccessToken = async (): Promise<string | null> => {
-    if (!enabled || !import.meta.client) return null
-    const nuxtApp = useNuxtApp()
-    const activeUserManager = (nuxtApp.$userManager || (nuxtApp as any).userManager) as UserManager | undefined
-
-    if (!activeUserManager) return null
-
-    const oidcUser = await activeUserManager.getUser()
-    return oidcUser?.access_token || null
-  }
-
   return {
     enabled,
     isAuthenticated,
     user,
     login,
     logout,
-    handleCallback,
-    getAccessToken
+    handleCallback
   }
 }
