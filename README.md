@@ -40,7 +40,7 @@ API_URL=http://localhost:8080
 # Setting these will enable OIDC authentication
 NUXT_PUBLIC_OIDC_ISSUER=https://your-issuer.com/
 NUXT_PUBLIC_OIDC_CLIENT_ID=your-client-id
-NUXT_PUBLIC_OIDC_REDIRECT_URI=http://localhost:3000/callback
+NUXT_PUBLIC_OIDC_REDIRECT_URI=http://localhost:3000/auth/callback
 NUXT_PUBLIC_OIDC_SCOPES=openid profile email
 NUXT_PUBLIC_OIDC_AUDIENCE=your-api-audience (optional)
 ```
