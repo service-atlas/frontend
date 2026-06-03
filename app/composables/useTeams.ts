@@ -23,8 +23,24 @@ export function useTeams() {
     loading.value = true
     error.value = null
     try {
-      const data = await client<TeamDto[]>('/teams?page=1&pageSize=100', { method: 'GET' })
-      teams.value = Array.isArray(data) ? data : []
+      const pageSize = 100
+      let page = 1
+      let allTeams: TeamDto[] = []
+      let hasMore = true
+
+      while (hasMore) {
+        const data = await client<TeamDto[]>(`/teams?page=${page}&pageSize=${pageSize}`, { method: 'GET' })
+        const pageTeams = Array.isArray(data) ? data : []
+        allTeams = [...allTeams, ...pageTeams]
+
+        if (pageTeams.length < pageSize) {
+          hasMore = false
+        } else {
+          page++
+        }
+      }
+
+      teams.value = allTeams
     } catch (e: unknown) {
       error.value = e instanceof Error ? e.message : 'Failed to load teams'
       throw e
