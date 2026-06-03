@@ -20,6 +20,7 @@ export default defineNuxtPlugin((nuxtApp) => {
       redirect_uri: oidcConfig.redirectUri,
       response_type: 'code',
       scope: oidcConfig.scopes,
+      extraQueryParams: oidcConfig.audience ? { audience: oidcConfig.audience } : {},
       loadUserInfo: true,
       automaticSilentRenew: true
     }
@@ -27,7 +28,8 @@ export default defineNuxtPlugin((nuxtApp) => {
     console.info('Initializing OIDC UserManager with:', {
       authority: settings.authority,
       client_id: settings.client_id,
-      redirect_uri: settings.redirect_uri
+      redirect_uri: settings.redirect_uri,
+      audience: oidcConfig.audience
     })
 
     userManager = new (oidc as any).UserManager(settings) as oidc.UserManager
