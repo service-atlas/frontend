@@ -6,7 +6,10 @@ export const useApi = () => {
 
   // In development, route through Nuxt dev proxy at /api to avoid CORS.
   // In production, use the configured absolute API URL, falling back to /api if missing.
-  const baseURL = (import.meta.dev ? '/api' : (config.public?.apiUrl as string) || '/api')
+  // We use process.server to check if we are on the server (SSR) and use the internal API URL.
+  const baseURL = (import.meta.dev
+    ? '/api'
+    : (import.meta.server ? (config.apiUrl as string) : (config.public?.apiUrl as string)) || '/api')
 
   const apiFetch = $fetch.create({
     baseURL,
