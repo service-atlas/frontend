@@ -14,9 +14,11 @@ export default defineNuxtConfig({
   css: ['~/assets/css/main.css'],
 
   runtimeConfig: {
+    // Private keys are only available on the server
+    apiUrl: process.env.API_URL || 'http://localhost:8080',
     public: {
       // Base URL for backend API
-      apiUrl: process.env.API_URL || 'http://localhost:8080',
+      apiUrl: process.env.NUXT_PUBLIC_API_URL || process.env.API_URL || 'http://localhost:8080',
       oidc: {
         issuer: process.env.NUXT_PUBLIC_OIDC_ISSUER || '',
         clientId: process.env.NUXT_PUBLIC_OIDC_CLIENT_ID || '',
