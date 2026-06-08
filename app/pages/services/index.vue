@@ -4,6 +4,7 @@ import type { ServiceDto } from '~/composables/useServices'
 import { useServices } from '~/composables/useServices'
 import { useTeams } from '~/composables/useTeams'
 import { useReports } from '~/composables/useReports'
+import { useAuth } from '~/composables/useAuth'
 
 definePageMeta({
   title: 'Services'
@@ -19,9 +20,26 @@ const {
   deleteService
 } = useServices()
 
+const { isAuthenticated, login } = useAuth()
+const route = useRoute()
+
+function handleLogin() {
+  console.log('Services page: handleLogin called')
+  login(route.fullPath)
+}
+
 onMounted(() => {
-  fetchServices()
-  loadTeamData()
+  if (isAuthenticated.value) {
+    fetchServices()
+    loadTeamData()
+  }
+})
+
+watch(isAuthenticated, (val) => {
+  if (val) {
+    fetchServices()
+    loadTeamData()
+  }
 })
 
 // Create modal state
@@ -243,177 +261,201 @@ async function _handleDelete() {
       title="Manage Services"
       description="Create new services and manage existing ones."
     >
-      <div class="flex items-center justify-between gap-2 mb-3">
-        <UButton
-          icon="lucide:plus"
-          label="New Service"
-          @click="showCreate = true"
-        />
-
-        <div class="flex items-center gap-2">
-          <USelect
-            v-model="groupBy"
-            :items="groupByOptions"
-            icon="lucide:layers"
-            class="w-32"
-          />
-          <UInput
-            v-model="searchQuery"
-            placeholder="Search services…"
-            icon="lucide:search"
-          />
-          <UButton
-            v-if="hasQuery"
-            color="neutral"
-            variant="ghost"
-            icon="lucide:x"
-            aria-label="Clear search"
-            @click="searchQuery = ''"
-          />
-          <UButton
-            icon="lucide:rotate-cw"
-            color="neutral"
-            variant="ghost"
-            :loading="combinedLoading"
-            aria-label="Refresh"
-            @click="refresh()"
-          />
-        </div>
-      </div>
-
-      <UCard>
-        <template #header>
-          <div class="flex items-center justify-between">
-            <span class="font-medium">Services</span>
-            <span
-              v-if="combinedLoading"
-              class="text-(--ui-text-muted) text-sm"
-            >Loading…</span>
+      <template v-if="!isAuthenticated">
+        <UCard>
+          <div class="flex flex-col items-center justify-center py-12 text-center">
+            <UIcon
+              name="lucide:lock"
+              class="w-12 h-12 text-(--ui-text-muted) mb-4"
+            />
+            <h3 class="text-lg font-semibold mb-2">
+              Authentication Required
+            </h3>
+            <p class="text-(--ui-text-muted) mb-6 max-w-sm">
+              Please log in to view and manage services.
+            </p>
+            <UButton
+              label="Login with OIDC"
+              icon="lucide:log-in"
+              @click="handleLogin()"
+            />
           </div>
-        </template>
+        </UCard>
+      </template>
 
-        <div
-          v-if="error"
-          class="text-red-600 text-sm mb-2"
-        >
-          {{ error }}
+      <template v-else>
+        <div class="flex items-center justify-between gap-2 mb-3">
+          <UButton
+            icon="lucide:plus"
+            label="New Service"
+            @click="showCreate = true"
+          />
+
+          <div class="flex items-center gap-2">
+            <USelect
+              v-model="groupBy"
+              :items="groupByOptions"
+              icon="lucide:layers"
+              class="w-32"
+            />
+            <UInput
+              v-model="searchQuery"
+              placeholder="Search services…"
+              icon="lucide:search"
+            />
+            <UButton
+              v-if="hasQuery"
+              color="neutral"
+              variant="ghost"
+              icon="lucide:x"
+              aria-label="Clear search"
+              @click="searchQuery = ''"
+            />
+            <UButton
+              icon="lucide:rotate-cw"
+              color="neutral"
+              variant="ghost"
+              :loading="combinedLoading"
+              aria-label="Refresh"
+              @click="refresh()"
+            />
+          </div>
         </div>
 
-        <div
-          v-if="!loading && displayedServices.length === 0"
-          class="text-(--ui-text-muted)"
-        >
-          <template v-if="hasQuery">
-            No results found.
+        <UCard>
+          <template #header>
+            <div class="flex items-center justify-between">
+              <span class="font-medium">Services</span>
+              <span
+                v-if="combinedLoading"
+                class="text-(--ui-text-muted) text-sm"
+              >Loading…</span>
+            </div>
           </template>
-          <template v-else>
-            No services yet. Create your first service to get started.
-          </template>
-        </div>
 
-        <div
-          v-else
-          class="flex flex-col"
-        >
           <div
-            v-for="group in groupedServices"
-            :key="group.type"
-            class="mb-2 last:mb-0"
+            v-if="error"
+            class="text-red-600 text-sm mb-2"
           >
-            <button
-              class="w-full flex items-center justify-between gap-2 p-2 rounded-md bg-(--ui-bg-muted) hover:bg-(--ui-border-muted) transition-colors text-left"
-              @click="toggleGroup(group.type)"
-            >
-              <div class="flex items-center gap-2">
-                <UIcon
-                  :name="collapsedGroups.has(group.type) ? 'lucide:chevron-right' : 'lucide:chevron-down'"
-                  class="w-4 h-4 text-(--ui-text-muted)"
-                />
-                <h3 class="text-sm font-semibold uppercase tracking-wider">
-                  {{ group.type }}
-                </h3>
-                <span class="text-xs text-(--ui-text-muted) px-2 py-0.5 rounded-full bg-(--ui-bg-elevated) border border-(--ui-border)">
-                  {{ group.services.length }}
-                </span>
-              </div>
-            </button>
+            {{ error }}
+          </div>
 
+          <div
+            v-if="!loading && displayedServices.length === 0"
+            class="text-(--ui-text-muted)"
+          >
+            <template v-if="hasQuery">
+              No results found.
+            </template>
+            <template v-else>
+              No services yet. Create your first service to get started.
+            </template>
+          </div>
+
+          <div
+            v-else
+            class="flex flex-col"
+          >
             <div
-              v-if="!collapsedGroups.has(group.type)"
-              class="flex flex-col divide-y divide-(--ui-border-muted) px-2"
+              v-for="group in groupedServices"
+              :key="group.type"
+              class="mb-2 last:mb-0"
             >
-              <div
-                v-for="s in group.services"
-                :key="s.id"
-                class="py-3 flex items-center justify-between gap-3"
+              <button
+                class="w-full flex items-center justify-between gap-2 p-2 rounded-md bg-(--ui-bg-muted) hover:bg-(--ui-border-muted) transition-colors text-left"
+                @click="toggleGroup(group.type)"
               >
-                <div class="min-w-0">
-                  <NuxtLink
-                    class="font-medium truncate hover:underline block"
-                    :to="`/service/${s.id}`"
-                  >
-                    {{ s.name }}
-                  </NuxtLink>
-                  <div class="flex items-center gap-x-3 text-xs text-(--ui-text-muted) mt-0.5 overflow-hidden">
-                    <span
-                      v-if="groupBy !== 'type' && s.type"
-                      class="flex items-center gap-1 flex-shrink-0"
-                    >
-                      <UIcon
-                        name="lucide:tag"
-                        class="w-3.5 h-3.5"
-                      />
-                      {{ s.type }}
-                    </span>
-                    <span
-                      v-if="groupBy !== 'tier' && s.tier !== undefined"
-                      class="flex items-center gap-1 flex-shrink-0"
-                    >
-                      <UIcon
-                        name="lucide:layers"
-                        class="w-3.5 h-3.5"
-                      />
-                      Tier {{ s.tier }}
-                    </span>
-                    <span
-                      v-if="groupBy !== 'team' && serviceTeamsMap[s.id]?.length"
-                      class="flex items-center gap-1 truncate"
-                    >
-                      <UIcon
-                        name="lucide:users"
-                        class="w-3.5 h-3.5 flex-shrink-0"
-                      />
-                      <span class="truncate">{{ serviceTeamsMap[s.id].join(', ') }}</span>
-                    </span>
-                    <a
-                      v-if="s.url"
-                      :href="s.url"
-                      target="_blank"
-                      class="flex items-center gap-1 text-(--ui-primary) hover:underline flex-shrink-0"
-                    >
-                      <UIcon
-                        name="i-lucide-link"
-                        class="size-3.5"
-                      />
-                      External Link
-                    </a>
-                  </div>
-                </div>
                 <div class="flex items-center gap-2">
-                  <UButton
-                    size="sm"
-                    icon="lucide:trash"
-                    color="neutral"
-                    variant="ghost"
-                    label="Delete"
-                    @click="confirmDelete(s.id)"
+                  <UIcon
+                    :name="collapsedGroups.has(group.type) ? 'lucide:chevron-right' : 'lucide:chevron-down'"
+                    class="w-4 h-4 text-(--ui-text-muted)"
                   />
+                  <h3 class="text-sm font-semibold uppercase tracking-wider">
+                    {{ group.type }}
+                  </h3>
+                  <span class="text-xs text-(--ui-text-muted) px-2 py-0.5 rounded-full bg-(--ui-bg-elevated) border border-(--ui-border)">
+                    {{ group.services.length }}
+                  </span>
+                </div>
+              </button>
+
+              <div
+                v-if="!collapsedGroups.has(group.type)"
+                class="flex flex-col divide-y divide-(--ui-border-muted) px-2"
+              >
+                <div
+                  v-for="s in group.services"
+                  :key="s.id"
+                  class="py-3 flex items-center justify-between gap-3"
+                >
+                  <div class="min-w-0">
+                    <NuxtLink
+                      class="font-medium truncate hover:underline block"
+                      :to="`/service/${s.id}`"
+                    >
+                      {{ s.name }}
+                    </NuxtLink>
+                    <div class="flex items-center gap-x-3 text-xs text-(--ui-text-muted) mt-0.5 overflow-hidden">
+                      <span
+                        v-if="groupBy !== 'type' && s.type"
+                        class="flex items-center gap-1 flex-shrink-0"
+                      >
+                        <UIcon
+                          name="lucide:tag"
+                          class="w-3.5 h-3.5"
+                        />
+                        {{ s.type }}
+                      </span>
+                      <span
+                        v-if="groupBy !== 'tier' && s.tier !== undefined"
+                        class="flex items-center gap-1 flex-shrink-0"
+                      >
+                        <UIcon
+                          name="lucide:layers"
+                          class="w-3.5 h-3.5"
+                        />
+                        Tier {{ s.tier }}
+                      </span>
+                      <span
+                        v-if="groupBy !== 'team' && serviceTeamsMap[s.id]?.length"
+                        class="flex items-center gap-1 truncate"
+                      >
+                        <UIcon
+                          name="lucide:users"
+                          class="w-3.5 h-3.5 flex-shrink-0"
+                        />
+                        <span class="truncate">{{ serviceTeamsMap[s.id].join(', ') }}</span>
+                      </span>
+                      <a
+                        v-if="s.url"
+                        :href="s.url"
+                        target="_blank"
+                        class="flex items-center gap-1 text-(--ui-primary) hover:underline flex-shrink-0"
+                      >
+                        <UIcon
+                          name="i-lucide-link"
+                          class="size-3.5"
+                        />
+                        External Link
+                      </a>
+                    </div>
+                  </div>
+                  <div class="flex items-center gap-2">
+                    <UButton
+                      size="sm"
+                      icon="lucide:trash"
+                      color="neutral"
+                      variant="ghost"
+                      label="Delete"
+                      @click="confirmDelete(s.id)"
+                    />
+                  </div>
                 </div>
               </div>
             </div>
           </div>
-        </div>
-      </UCard>
+        </UCard>
+      </template>
     </UPageSection>
 
     <!-- Create Modal -->

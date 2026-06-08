@@ -11,9 +11,7 @@ export interface DebtItemDto {
 }
 
 export function useDebt() {
-  const config = useRuntimeConfig()
-  const baseURL = (import.meta.dev ? '/api' : (config.public?.apiUrl as string) || '/api')
-  const client = $fetch.create({ baseURL })
+  const apiFetch = useApi()
 
   const items = ref<DebtItemDto[]>([])
   const loading = ref(false)
@@ -23,7 +21,7 @@ export function useDebt() {
     loading.value = true
     error.value = null
     try {
-      const data = await client<DebtItemDto[]>(`/services/${serviceId}/debt`, { method: 'GET' })
+      const data = await apiFetch<DebtItemDto[]>(`/services/${serviceId}/debt`, { method: 'GET' })
       items.value = Array.isArray(data) ? data : []
     } catch (e: unknown) {
       // Treat no-debt responses as empty, not errors. Some backends return 404/204 or custom 4xx.
@@ -70,12 +68,12 @@ export function useDebt() {
       status?: DebtItemDto['status']
     }
   ) {
-    await client(`/services/${serviceId}/debt`, { method: 'POST', body: payload })
+    await apiFetch(`/services/${serviceId}/debt`, { method: 'POST', body: payload })
     await listDebt(serviceId)
   }
 
   async function updateDebtStatus(serviceId: string, debtId: string, status: DebtItemDto['status']) {
-    await client(`/debt/${debtId}`, { method: 'PATCH', body: { status } })
+    await apiFetch(`/debt/${debtId}`, { method: 'PATCH', body: { status } })
     await listDebt(serviceId)
   }
 

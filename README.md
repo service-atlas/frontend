@@ -16,14 +16,32 @@ Service Atlas is a Nuxt 4 application that helps you manage services and teams, 
 - A running Service Atlas API or any API exposing the expected endpoints
 
 ## Configuration
-The frontend talks to an HTTP API. Configure the base URL via `API_URL`.
+The frontend talks to an HTTP API and supports optional OIDC authentication.
+
+### API Configuration
+Configure the base URL via `API_URL`.
 
 - Development: requests to `/api/*` are proxied to `API_URL` to avoid CORS (see `nuxt.config.ts > nitro.devProxy`). Default is `http://localhost:8080`.
 - Production: the app uses `public.apiUrl` (derived from `API_URL`). If not provided, it will still call `/api/*` assuming you terminate or rewrite paths at your edge/server.
 
-Example `.env` (optional):
-```
+### Authentication (OIDC)
+The application supports two authentication modes:
+
+1.  **Local/no-auth mode (default)**: If OIDC environment variables are not provided, authentication is disabled and the application remains accessible without login.
+2.  **OIDC-enabled mode**: If OIDC environment variables are provided, the application initializes OIDC authentication and requires login.
+
+Example `.env` configuration:
+
+```env
+# Backend API URL
 API_URL=http://localhost:8080
+
+# OIDC Configuration (Optional)
+# Setting these will enable OIDC authentication
+NUXT_PUBLIC_OIDC_ISSUER=https://your-issuer.com/
+NUXT_PUBLIC_OIDC_CLIENT_ID=your-client-id
+NUXT_PUBLIC_OIDC_REDIRECT_URI=http://localhost:3000/auth/callback
+NUXT_PUBLIC_OIDC_SCOPES=openid profile email
 ```
 
 ## Install

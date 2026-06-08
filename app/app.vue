@@ -29,6 +29,17 @@ const navItems = [
   { label: 'Services', to: '/services' }
 ]
 
+const { enabled: isAuthEnabled, isAuthenticated, user, login, logout } = useAuth()
+
+function handleLogin() {
+  console.log('App.vue: handleLogin called')
+  login()
+}
+
+if (isAuthEnabled) {
+  console.info('OIDC Authentication is enabled')
+}
+
 const isActive = (to: string) => {
   // consider the route active if it starts with the target path
   return route.path === to || route.path.startsWith(to + '/')
@@ -69,6 +80,29 @@ const isActive = (to: string) => {
 
       <template #right>
         <UColorModeButton />
+
+        <template v-if="isAuthEnabled">
+          <UButton
+            v-if="!isAuthenticated"
+            label="Login"
+            color="neutral"
+            variant="ghost"
+            @click="handleLogin"
+          />
+          <UDropdownMenu
+            v-else
+            :items="[
+              [{ label: user?.name || user?.email || 'User', disabled: true }],
+              [{ label: 'Logout', icon: 'i-lucide-log-out', onSelect: logout }]
+            ]"
+          >
+            <UButton
+              icon="i-lucide-user"
+              color="neutral"
+              variant="ghost"
+            />
+          </UDropdownMenu>
+        </template>
 
         <UButton
           to="https://github.com/service-atlas"

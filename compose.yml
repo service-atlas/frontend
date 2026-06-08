@@ -30,6 +30,8 @@ services:
       - "8081:8080"
     depends_on:
       - backend
+    env_file:
+      - .env
     environment:
       # Point the Nuxt app to the backend running in this compose
       # Use localhost so the browser (running on the host) can reach it via the published port
