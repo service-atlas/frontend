@@ -24,8 +24,24 @@ export function useServices() {
     loading.value = true
     error.value = null
     try {
-      const data = await apiFetch<ServiceDto[]>('/services?page=1&pageSize=100', { method: 'GET' })
-      services.value = Array.isArray(data) ? data : []
+      const pageSize = 100
+      let page = 1
+      let allServices: ServiceDto[] = []
+      let hasMore = true
+
+      while (hasMore) {
+        const data = await apiFetch<ServiceDto[]>(`/services?page=${page}&pageSize=${pageSize}`, { method: 'GET' })
+        const pageServices = Array.isArray(data) ? data : []
+        allServices = [...allServices, ...pageServices]
+
+        if (pageServices.length < pageSize) {
+          hasMore = false
+        } else {
+          page++
+        }
+      }
+
+      services.value = allServices
     } catch (e: unknown) {
       error.value = e instanceof Error ? e.message : 'Failed to load services'
       throw e
