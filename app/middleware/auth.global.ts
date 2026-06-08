@@ -8,7 +8,7 @@ export default defineNuxtRouteMiddleware((to) => {
 
   // Allow the callback and login routes to bypass authentication
   // This matches the redirect_uri configured in OIDC
-  if (to.path === '/auth/callback' || to.path === '/auth/login') {
+  if (to.path === '/auth/callback' || to.path === '/auth/login' || to.path === '/auth/silent-callback') {
     return
   }
 

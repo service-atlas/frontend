@@ -18,6 +18,7 @@ export default defineNuxtPlugin((nuxtApp) => {
       authority: oidcConfig.issuer,
       client_id: oidcConfig.clientId,
       redirect_uri: oidcConfig.redirectUri,
+      silent_redirect_uri: (oidcConfig as any).silentRedirectUri || undefined,
       response_type: 'code',
       scope: oidcConfig.scopes,
       extraQueryParams: oidcConfig.audience ? { audience: oidcConfig.audience } : {},

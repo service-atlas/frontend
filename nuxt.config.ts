@@ -23,6 +23,7 @@ export default defineNuxtConfig({
         issuer: process.env.NUXT_PUBLIC_OIDC_ISSUER || '',
         clientId: process.env.NUXT_PUBLIC_OIDC_CLIENT_ID || '',
         redirectUri: process.env.NUXT_PUBLIC_OIDC_REDIRECT_URI || '',
+        silentRedirectUri: process.env.NUXT_PUBLIC_OIDC_SILENT_REDIRECT_URI || '',
         scopes: process.env.NUXT_PUBLIC_OIDC_SCOPES || 'openid profile email',
         audience: process.env.NUXT_PUBLIC_OIDC_AUDIENCE || '',
         authEnabled: !!(process.env.NUXT_PUBLIC_OIDC_ISSUER && process.env.NUXT_PUBLIC_OIDC_CLIENT_ID)
