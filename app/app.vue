@@ -24,6 +24,7 @@ useSeoMeta({
 const route = useRoute()
 
 const navItems = [
+  { label: 'Platforms', to: '/platforms' },
   { label: 'Reports', to: '/reports' },
   { label: 'Teams', to: '/teams' },
   { label: 'Services', to: '/services' }

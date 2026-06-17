@@ -45,10 +45,10 @@ async function handleCreate() {
 }
 
 const columns = [
-  { key: 'name', label: 'Name', sortable: true },
-  { key: 'description', label: 'Description' },
-  { key: 'product_count', label: 'Products', sortable: true },
-  { key: 'updated', label: 'Updated', sortable: true }
+  { id: 'name', key: 'name', label: 'Name', sortable: true },
+  { id: 'description', key: 'description', label: 'Description' },
+  { id: 'product_count', key: 'product_count', label: 'Products', sortable: true },
+  { id: 'updated', key: 'updated', label: 'Updated', sortable: true }
 ]
 
 function formatDate(dateStr?: string) {
@@ -117,33 +117,24 @@ function formatDate(dateStr?: string) {
       </div>
     </UCard>
 
-    <UModal v-model="showCreateModal">
-      <UCard :ui="{ ring: '', divide: 'divide-y divide-gray-100 dark:divide-gray-800' }">
-        <template #header>
-          <div class="flex items-center justify-between">
-            <h3 class="text-base font-semibold leading-6 text-gray-900 dark:text-white">
-              Add Platform
-            </h3>
-            <UButton color="gray" variant="ghost" icon="i-heroicons-x-mark-20-solid" class="-my-1" @click="showCreateModal = false" />
-          </div>
-        </template>
-
+    <UModal v-model:open="showCreateModal" title="Add Platform" description="Create a new platform to manage its products.">
+      <template #body>
         <div class="space-y-4 py-4">
-          <UFormGroup label="Name" required>
+          <UFormField label="Name" required>
             <UInput v-model="createForm.name" placeholder="e.g. E-Commerce Platform" autofocus />
-          </UFormGroup>
-          <UFormGroup label="Description">
+          </UFormField>
+          <UFormField label="Description">
             <UTextarea v-model="createForm.description" placeholder="Optional description..." />
-          </UFormGroup>
+          </UFormField>
         </div>
+      </template>
 
-        <template #footer>
-          <div class="flex justify-end gap-x-3">
-            <UButton color="gray" variant="ghost" label="Cancel" @click="showCreateModal = false" />
-            <UButton color="primary" label="Create" :loading="isCreating" :disabled="!canCreate" @click="handleCreate" />
-          </div>
-        </template>
-      </UCard>
+      <template #footer>
+        <div class="flex justify-end gap-x-3">
+          <UButton color="neutral" variant="ghost" label="Cancel" @click="showCreateModal = false" />
+          <UButton color="primary" label="Create" :loading="isCreating" :disabled="!canCreate" @click="handleCreate" />
+        </div>
+      </template>
     </UModal>
   </div>
 </template>

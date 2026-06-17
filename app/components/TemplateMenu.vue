@@ -3,6 +3,7 @@
     v-slot="{ open }"
     :modal="false"
     :items="[
+      { label: 'Platforms', icon: 'lucide:layout-grid', to: '/platforms' },
       { label: 'Reports', icon: 'lucide:bar-chart-3', to: '/reports' },
       { label: 'Teams', icon: 'lucide:users', to: '/teams' },
       { label: 'Services', icon: 'lucide:box', to: '/services' }

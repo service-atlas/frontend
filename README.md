@@ -73,7 +73,7 @@ pnpm preview
 - `pnpm typecheck` – run TypeScript type checks
 
 ## Pages and features
-Top navigation exposes the main sections: Reports, Teams, and Services.
+Top navigation exposes the main sections: Platforms, Reports, Teams, and Services.
 
 - `/services`
   - List all services with search-as-you-type
