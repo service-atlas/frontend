@@ -1,21 +1,36 @@
 <script setup lang="ts">
-const links = [
-  {
-    label: 'Reports',
-    icon: 'lucide:bar-chart-3',
-    to: '/reports'
-  },
-  {
-    label: 'Teams',
-    icon: 'lucide:users',
-    to: '/teams'
-  },
-  {
-    label: 'Services',
-    icon: 'lucide:box',
-    to: '/services'
+const config = useRuntimeConfig()
+const enableProducts = computed(() => config.public.enableProducts)
+
+const links = computed(() => {
+  const baseLinks = [
+    {
+      label: 'Reports',
+      icon: 'lucide:bar-chart-3',
+      to: '/reports'
+    },
+    {
+      label: 'Teams',
+      icon: 'lucide:users',
+      to: '/teams'
+    },
+    {
+      label: 'Services',
+      icon: 'lucide:box',
+      to: '/services'
+    }
+  ]
+
+  if (enableProducts.value) {
+    baseLinks.splice(1, 0, {
+      label: 'Platforms',
+      icon: 'lucide:layers',
+      to: '/platforms'
+    })
   }
-]
+
+  return baseLinks
+})
 </script>
 
 <template>

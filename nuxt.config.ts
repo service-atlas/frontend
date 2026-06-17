@@ -16,9 +16,12 @@ export default defineNuxtConfig({
   runtimeConfig: {
     // Private keys are only available on the server
     apiUrl: process.env.API_URL || 'http://localhost:8080',
+    productsApiUrl: process.env.PRODUCTS_API_URL || 'http://localhost:8081',
     public: {
       // Base URL for backend API
       apiUrl: process.env.NUXT_PUBLIC_API_URL || process.env.API_URL || 'http://localhost:8080',
+      productsApiUrl: process.env.NUXT_PUBLIC_PRODUCTS_API_URL || process.env.PRODUCTS_API_URL || '',
+      enableProducts: process.env.NUXT_PUBLIC_ENABLE_PRODUCTS === 'true' || process.env.ENABLE_PRODUCTS === 'true',
       oidc: {
         issuer: process.env.NUXT_PUBLIC_OIDC_ISSUER || '',
         clientId: process.env.NUXT_PUBLIC_OIDC_CLIENT_ID || '',
@@ -49,6 +52,11 @@ export default defineNuxtConfig({
       '/api/': {
         target: process.env.API_URL ?? 'http://localhost:8080',
         changeOrigin: true
+      },
+      '/api/products/': {
+        target: process.env.PRODUCTS_API_URL ?? 'http://localhost:8081',
+        changeOrigin: true,
+        pathRewrite: { '^/api/products/': '/' }
       }
     }
   },
