@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { ref, onMounted, computed } from 'vue'
+import { ref, onMounted, computed, watch } from 'vue'
 import { usePlatforms } from '~/composables/usePlatforms'
 import { useAuth } from '~/composables/useAuth'
 
@@ -12,6 +12,12 @@ const { isAuthenticated } = useAuth()
 
 onMounted(() => {
   if (isAuthenticated.value) {
+    fetchPlatforms()
+  }
+})
+
+watch(isAuthenticated, (val) => {
+  if (val) {
     fetchPlatforms()
   }
 })
@@ -44,12 +50,6 @@ async function handleCreate() {
   }
 }
 
-const columns = [
-  { id: 'name', key: 'name', label: 'Name', sortable: true },
-  { id: 'description', key: 'description', label: 'Description' },
-  { id: 'product_count', key: 'product_count', label: 'Products', sortable: true },
-  { id: 'updated', key: 'updated', label: 'Updated', sortable: true }
-]
 
 function formatDate(dateStr?: string) {
   if (!dateStr) return '-'
@@ -81,29 +81,13 @@ function formatDate(dateStr?: string) {
       />
     </template>
 
-    <UCard :ui="{ body: { padding: 'p-0' } }">
-      <UTable
-        :rows="platforms"
-        :columns="columns"
-        :loading="loading"
-        @select="(row) => navigateTo(`/platforms/${row.id}`)"
-      >
-        <template #name-data="{ row }">
-          <NuxtLink :to="`/platforms/${row.id}`" class="text-primary font-medium hover:underline">
-            {{ row.name }}
-          </NuxtLink>
-        </template>
-        <template #product_count-data="{ row }">
-          <UBadge color="gray" variant="soft">
-            {{ row.product_count || 0 }} products
-          </UBadge>
-        </template>
-        <template #updated-data="{ row }">
-          <span class="text-sm text-muted-foreground">
-            {{ formatDate(row.updated) }}
-          </span>
-        </template>
-      </UTable>
+    <UCard>
+      <template #header>
+        <div class="flex items-center justify-between">
+          <span class="font-medium">Platforms</span>
+          <span v-if="loading" class="text-sm text-muted-foreground">Loading...</span>
+        </div>
+      </template>
 
       <div v-if="!loading && platforms.length === 0" class="flex flex-col items-center justify-center py-12 text-center">
         <UIcon name="i-heroicons-circle-stack" class="h-12 w-12 text-muted-foreground mb-4" />
@@ -114,6 +98,31 @@ function formatDate(dateStr?: string) {
           icon="i-heroicons-plus"
           @click="showCreateModal = true"
         />
+      </div>
+
+      <div v-else class="flex flex-col divide-y divide-gray-100 dark:divide-gray-800">
+        <div v-for="platform in platforms" :key="platform.id" class="py-4 flex items-center justify-between hover:bg-gray-50 dark:hover:bg-gray-800/50 transition-colors px-4 -mx-4 cursor-pointer" @click="navigateTo(`/platforms/${platform.id}`)">
+          <div class="min-w-0 flex-1">
+            <div class="flex items-center gap-2">
+              <NuxtLink :to="`/platforms/${platform.id}`" class="text-primary font-medium hover:underline truncate" @click.stop>
+                {{ platform.name }}
+              </NuxtLink>
+              <UBadge color="neutral" variant="soft" size="sm">
+                {{ platform.product_count || 0 }} products
+              </UBadge>
+            </div>
+            <p v-if="platform.description" class="text-sm text-muted-foreground truncate mt-1">
+              {{ platform.description }}
+            </p>
+          </div>
+          <div class="flex items-center gap-4 ml-4">
+            <div class="text-right hidden sm:block">
+              <p class="text-xs text-muted-foreground">Updated</p>
+              <p class="text-sm font-medium">{{ formatDate(platform.updated) }}</p>
+            </div>
+            <UIcon name="i-heroicons-chevron-right" class="h-5 w-5 text-muted-foreground" />
+          </div>
+        </div>
       </div>
     </UCard>
 

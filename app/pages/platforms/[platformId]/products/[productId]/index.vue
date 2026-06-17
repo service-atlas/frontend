@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { ref, onMounted, computed } from 'vue'
+import { ref, onMounted, computed, watch } from 'vue'
 import { usePlatforms, type PlatformDto } from '~/composables/usePlatforms'
 import { useProducts, type ProductDto } from '~/composables/useProducts'
 import { useFlows } from '~/composables/useFlows'
@@ -36,6 +36,12 @@ onMounted(() => {
   loadData()
 })
 
+watch(isAuthenticated, (val) => {
+  if (val) {
+    loadData()
+  }
+})
+
 definePageMeta({
   title: 'Product Details'
 })
@@ -68,13 +74,6 @@ async function handleCreate() {
   }
 }
 
-const columns = [
-  { id: 'name', key: 'name', label: 'Name', sortable: true },
-  { id: 'description', key: 'description', label: 'Description' },
-  { id: 'step_count', key: 'step_count', label: 'Steps', sortable: true },
-  { id: 'status', key: 'status', label: 'Status' },
-  { id: 'updated', key: 'updated', label: 'Updated', sortable: true }
-]
 
 const breadcrumbs = computed(() => [
   { label: 'Platforms', to: '/platforms' },
@@ -114,34 +113,13 @@ function formatDate(dateStr?: string) {
       />
     </template>
 
-    <UCard :ui="{ body: { padding: 'p-0' } }">
-      <UTable
-        :rows="flows"
-        :columns="columns"
-        :loading="loading"
-        @select="(row) => navigateTo(`/platforms/${platformId}/products/${productId}/flows/${row.id}`)"
-      >
-        <template #name-data="{ row }">
-          <NuxtLink :to="`/platforms/${platformId}/products/${productId}/flows/${row.id}`" class="text-primary font-medium hover:underline">
-            {{ row.name }}
-          </NuxtLink>
-        </template>
-        <template #step_count-data="{ row }">
-          <UBadge color="gray" variant="soft">
-            {{ row.step_count || 0 }} steps
-          </UBadge>
-        </template>
-        <template #status-data="{ row }">
-          <UBadge :color="row.status === 'active' ? 'green' : 'gray'" variant="subtle" class="capitalize">
-            {{ row.status || 'draft' }}
-          </UBadge>
-        </template>
-        <template #updated-data="{ row }">
-          <span class="text-sm text-muted-foreground">
-            {{ formatDate(row.updated) }}
-          </span>
-        </template>
-      </UTable>
+    <UCard>
+      <template #header>
+        <div class="flex items-center justify-between">
+          <span class="font-medium">Flows</span>
+          <span v-if="loading" class="text-sm text-muted-foreground">Loading...</span>
+        </div>
+      </template>
 
       <div v-if="!loading && flows.length === 0" class="flex flex-col items-center justify-center py-12 text-center">
         <UIcon name="i-heroicons-arrow-path" class="h-12 w-12 text-muted-foreground mb-4" />
@@ -152,6 +130,34 @@ function formatDate(dateStr?: string) {
           icon="i-heroicons-plus"
           @click="showCreateModal = true"
         />
+      </div>
+
+      <div v-else class="flex flex-col divide-y divide-gray-100 dark:divide-gray-800">
+        <div v-for="flow in flows" :key="flow.id" class="py-4 flex items-center justify-between hover:bg-gray-50 dark:hover:bg-gray-800/50 transition-colors px-4 -mx-4 cursor-pointer" @click="navigateTo(`/platforms/${platformId}/products/${productId}/flows/${flow.id}`)">
+          <div class="min-w-0 flex-1">
+            <div class="flex items-center gap-2">
+              <NuxtLink :to="`/platforms/${platformId}/products/${productId}/flows/${flow.id}`" class="text-primary font-medium hover:underline truncate" @click.stop>
+                {{ flow.name }}
+              </NuxtLink>
+              <UBadge color="neutral" variant="soft" size="sm">
+                {{ flow.step_count || 0 }} steps
+              </UBadge>
+              <UBadge :color="flow.status === 'active' ? 'green' : 'gray'" variant="subtle" size="sm" class="capitalize">
+                {{ flow.status || 'draft' }}
+              </UBadge>
+            </div>
+            <p v-if="flow.description" class="text-sm text-muted-foreground truncate mt-1">
+              {{ flow.description }}
+            </p>
+          </div>
+          <div class="flex items-center gap-4 ml-4">
+            <div class="text-right hidden sm:block">
+              <p class="text-xs text-muted-foreground">Updated</p>
+              <p class="text-sm font-medium">{{ formatDate(flow.updated) }}</p>
+            </div>
+            <UIcon name="i-heroicons-chevron-right" class="h-5 w-5 text-muted-foreground" />
+          </div>
+        </div>
       </div>
     </UCard>
 
