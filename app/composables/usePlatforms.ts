@@ -1,7 +1,7 @@
 import { ref } from 'vue'
 
 export interface PlatformDto {
-  id: string
+  id: string | number
   name: string
   description?: string
   product_count?: number

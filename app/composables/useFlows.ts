@@ -1,10 +1,10 @@
 import { ref } from 'vue'
 
 export interface FlowDto {
-  id: string
+  id: string | number
   name: string
   description?: string
-  product_id: string
+  product_id: string | number
   step_count?: number
   status?: string
   updated?: string
@@ -36,7 +36,7 @@ export function useFlows() {
     return await apiFetch<FlowDto>(`/flows/${id}`, { method: 'GET' })
   }
 
-  async function createFlow(payload: { name: string; description?: string; product_id: string }) {
+  async function createFlow(payload: { name: string; description?: string; product_id: string | number }) {
     const data = await apiFetch<FlowDto>('/flows', { method: 'POST', body: payload })
     return data
   }

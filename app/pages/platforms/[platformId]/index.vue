@@ -66,7 +66,7 @@ async function handleCreate() {
     const newProduct = await createProduct({
       name: createForm.value.name.trim(),
       description: createForm.value.description.trim(),
-      platform_id: platformId
+      platform_id: Number.parseInt(platformId, 10)
     })
     showCreateModal.value = false
     createForm.value = { name: '', description: '' }

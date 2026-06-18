@@ -1,10 +1,10 @@
 import { ref } from 'vue'
 
 export interface ProductDto {
-  id: string
+  id: string | number
   name: string
   description?: string
-  platform_id: string
+  platform_id: string | number
   flow_count?: number
   updated?: string
   created?: string
@@ -35,7 +35,7 @@ export function useProducts() {
     return await apiFetch<ProductDto>(`/products/${id}`, { method: 'GET' })
   }
 
-  async function createProduct(payload: { name: string; description?: string; platform_id: string }) {
+  async function createProduct(payload: { name: string; description?: string; platform_id: string | number }) {
     const data = await apiFetch<ProductDto>('/products', { method: 'POST', body: payload })
     return data
   }

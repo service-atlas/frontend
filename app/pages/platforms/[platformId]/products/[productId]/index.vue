@@ -72,7 +72,7 @@ async function handleCreate() {
     const newFlow = await createFlow({
       name: createForm.value.name.trim(),
       description: createForm.value.description.trim(),
-      product_id: productId
+      product_id: Number.parseInt(productId, 10)
     })
     showCreateModal.value = false
     createForm.value = { name: '', description: '' }
