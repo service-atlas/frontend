@@ -36,8 +36,8 @@ export function useFlows() {
     return await apiFetch<FlowDto>(`/flows/${id}`, { method: 'GET' })
   }
 
-  async function createFlow(payload: { name: string; description?: string; product_id: string | number }) {
-    const data = await apiFetch<FlowDto>('/flows', { method: 'POST', body: payload })
+  async function createFlow(productId: string | number, payload: { name: string; description?: string }) {
+    const data = await apiFetch<FlowDto>(`/products/${productId}/flows`, { method: 'POST', body: payload })
     return data
   }
 
