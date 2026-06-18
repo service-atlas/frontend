@@ -10,15 +10,29 @@ definePageMeta({
 const { platforms, loading, error, fetchPlatforms, createPlatform } = usePlatforms()
 const { isAuthenticated } = useAuth()
 
+async function loadPlatforms() {
+  await fetchPlatforms()
+  // Fetch product counts for each platform
+  await Promise.all(platforms.value.map(async (platform) => {
+    try {
+      const { apiFetch } = useProductsApi()
+      const products = await apiFetch<unknown[]>(`/platforms/${platform.id}/products`, { method: 'GET' })
+      platform.product_count = products.length
+    } catch (e) {
+      console.error(`Failed to fetch products for platform ${platform.id}`, e)
+    }
+  }))
+}
+
 onMounted(() => {
   if (isAuthenticated.value) {
-    fetchPlatforms()
+    loadPlatforms()
   }
 })
 
 watch(isAuthenticated, (val) => {
   if (val) {
-    fetchPlatforms()
+    loadPlatforms()
   }
 })
 
@@ -49,20 +63,18 @@ async function handleCreate() {
     isCreating.value = false
   }
 }
-
-
-function formatDate(dateStr?: string) {
-  if (!dateStr) return '-'
-  return new Date(dateStr).toLocaleDateString()
-}
 </script>
 
 <template>
   <div class="space-y-6">
     <div class="flex items-center justify-between">
       <div>
-        <h1 class="text-3xl font-bold tracking-tight">Platforms</h1>
-        <p class="text-muted-foreground mt-1">Manage your business platforms and their products.</p>
+        <h1 class="text-3xl font-bold tracking-tight">
+          Platforms
+        </h1>
+        <p class="text-muted-foreground mt-1">
+          Manage your business platforms and their products.
+        </p>
       </div>
       <UButton
         icon="i-heroicons-plus"
@@ -91,8 +103,12 @@ function formatDate(dateStr?: string) {
 
       <div v-if="!loading && platforms.length === 0" class="flex flex-col items-center justify-center py-12 text-center">
         <UIcon name="i-heroicons-circle-stack" class="h-12 w-12 text-muted-foreground mb-4" />
-        <h3 class="text-lg font-medium">No platforms found</h3>
-        <p class="text-muted-foreground mb-6">Get started by creating your first platform.</p>
+        <h3 class="text-lg font-medium">
+          No platforms found
+        </h3>
+        <p class="text-muted-foreground mb-6">
+          Get started by creating your first platform.
+        </p>
         <UButton
           label="Add Platform"
           icon="i-heroicons-plus"
@@ -116,10 +132,6 @@ function formatDate(dateStr?: string) {
             </p>
           </div>
           <div class="flex items-center gap-4 ml-4">
-            <div class="text-right hidden sm:block">
-              <p class="text-xs text-muted-foreground">Updated</p>
-              <p class="text-sm font-medium">{{ formatDate(platform.updated) }}</p>
-            </div>
             <UIcon name="i-heroicons-chevron-right" class="h-5 w-5 text-muted-foreground" />
           </div>
         </div>

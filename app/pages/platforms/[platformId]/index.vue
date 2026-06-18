@@ -21,6 +21,16 @@ async function loadData() {
       fetchProductsByPlatform(platformId)
     ])
     platform.value = p
+
+    await Promise.all(products.value.map(async (product) => {
+      try {
+        const { apiFetch } = useProductsApi()
+        const flowsData = await apiFetch<unknown[]>(`/products/${product.id}/flows`, { method: 'GET' })
+        product.flow_count = flowsData.length
+      } catch (e) {
+        console.error(`Failed to fetch flows for product ${product.id}`, e)
+      }
+    }))
   } catch (e) {
     console.error('Failed to load platform data', e)
   }
@@ -68,16 +78,10 @@ async function handleCreate() {
   }
 }
 
-
 const breadcrumbs = computed(() => [
   { label: 'Platforms', to: '/platforms' },
   { label: platform.value?.name || 'Loading...' }
 ])
-
-function formatDate(dateStr?: string) {
-  if (!dateStr) return '-'
-  return new Date(dateStr).toLocaleDateString()
-}
 </script>
 
 <template>
@@ -86,8 +90,12 @@ function formatDate(dateStr?: string) {
 
     <div class="flex items-center justify-between">
       <div>
-        <h1 class="text-3xl font-bold tracking-tight">{{ platform?.name || 'Platform' }}</h1>
-        <p v-if="platform?.description" class="text-muted-foreground mt-1">{{ platform.description }}</p>
+        <h1 class="text-3xl font-bold tracking-tight">
+          {{ platform?.name || 'Platform' }}
+        </h1>
+        <p v-if="platform?.description" class="text-muted-foreground mt-1">
+          {{ platform.description }}
+        </p>
       </div>
       <UButton
         icon="i-heroicons-plus"
@@ -116,8 +124,12 @@ function formatDate(dateStr?: string) {
 
       <div v-if="!loading && products.length === 0" class="flex flex-col items-center justify-center py-12 text-center">
         <UIcon name="i-heroicons-beaker" class="h-12 w-12 text-muted-foreground mb-4" />
-        <h3 class="text-lg font-medium">No products found</h3>
-        <p class="text-muted-foreground mb-6">Create your first product for this platform.</p>
+        <h3 class="text-lg font-medium">
+          No products found
+        </h3>
+        <p class="text-muted-foreground mb-6">
+          Create your first product for this platform.
+        </p>
         <UButton
           label="Add Product"
           icon="i-heroicons-plus"
@@ -141,10 +153,6 @@ function formatDate(dateStr?: string) {
             </p>
           </div>
           <div class="flex items-center gap-4 ml-4">
-            <div class="text-right hidden sm:block">
-              <p class="text-xs text-muted-foreground">Updated</p>
-              <p class="text-sm font-medium">{{ formatDate(product.updated) }}</p>
-            </div>
             <UIcon name="i-heroicons-chevron-right" class="h-5 w-5 text-muted-foreground" />
           </div>
         </div>

@@ -27,6 +27,16 @@ async function loadData() {
     ])
     platform.value = plat
     product.value = prod
+
+    await Promise.all(flows.value.map(async (flow) => {
+      try {
+        const { apiFetch } = useProductsApi()
+        const stepsData = await apiFetch<unknown[]>(`/flows/${flow.id}/steps`, { method: 'GET' })
+        flow.step_count = stepsData.length
+      } catch (e) {
+        console.error(`Failed to fetch steps for flow ${flow.id}`, e)
+      }
+    }))
   } catch (e) {
     console.error('Failed to load product data', e)
   }
@@ -74,17 +84,11 @@ async function handleCreate() {
   }
 }
 
-
 const breadcrumbs = computed(() => [
   { label: 'Platforms', to: '/platforms' },
   { label: platform.value?.name || '...', to: `/platforms/${platformId}` },
   { label: product.value?.name || 'Loading...' }
 ])
-
-function formatDate(dateStr?: string) {
-  if (!dateStr) return '-'
-  return new Date(dateStr).toLocaleDateString()
-}
 </script>
 
 <template>
@@ -93,8 +97,12 @@ function formatDate(dateStr?: string) {
 
     <div class="flex items-center justify-between">
       <div>
-        <h1 class="text-3xl font-bold tracking-tight">{{ product?.name || 'Product' }}</h1>
-        <p v-if="product?.description" class="text-muted-foreground mt-1">{{ product.description }}</p>
+        <h1 class="text-3xl font-bold tracking-tight">
+          {{ product?.name || 'Product' }}
+        </h1>
+        <p v-if="product?.description" class="text-muted-foreground mt-1">
+          {{ product.description }}
+        </p>
       </div>
       <UButton
         icon="i-heroicons-plus"
@@ -123,8 +131,12 @@ function formatDate(dateStr?: string) {
 
       <div v-if="!loading && flows.length === 0" class="flex flex-col items-center justify-center py-12 text-center">
         <UIcon name="i-heroicons-arrow-path" class="h-12 w-12 text-muted-foreground mb-4" />
-        <h3 class="text-lg font-medium">No flows found</h3>
-        <p class="text-muted-foreground mb-6">Create your first flow for this product.</p>
+        <h3 class="text-lg font-medium">
+          No flows found
+        </h3>
+        <p class="text-muted-foreground mb-6">
+          Create your first flow for this product.
+        </p>
         <UButton
           label="Add Flow"
           icon="i-heroicons-plus"
@@ -151,10 +163,6 @@ function formatDate(dateStr?: string) {
             </p>
           </div>
           <div class="flex items-center gap-4 ml-4">
-            <div class="text-right hidden sm:block">
-              <p class="text-xs text-muted-foreground">Updated</p>
-              <p class="text-sm font-medium">{{ formatDate(flow.updated) }}</p>
-            </div>
             <UIcon name="i-heroicons-chevron-right" class="h-5 w-5 text-muted-foreground" />
           </div>
         </div>
