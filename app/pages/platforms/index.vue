@@ -86,7 +86,7 @@ async function handleCreate() {
     <template v-if="error">
       <UAlert
         icon="i-heroicons-exclamation-triangle"
-        color="red"
+        color="error"
         variant="soft"
         title="Error loading platforms"
         :description="error"

@@ -107,7 +107,7 @@ const breadcrumbs = computed(() => [
     <template v-if="error">
       <UAlert
         icon="i-heroicons-exclamation-triangle"
-        color="red"
+        color="error"
         variant="soft"
         title="Error loading products"
         :description="error"

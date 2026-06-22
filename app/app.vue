@@ -23,12 +23,22 @@ useSeoMeta({
 
 const route = useRoute()
 
-const navItems = [
-  { label: 'Platforms', to: '/platforms' },
-  { label: 'Reports', to: '/reports' },
-  { label: 'Teams', to: '/teams' },
-  { label: 'Services', to: '/services' }
-]
+const config = useRuntimeConfig()
+const enableProducts = computed(() => config.public.enableProducts)
+
+const navItems = computed(() => {
+  const items = [
+    { label: 'Reports', to: '/reports' },
+    { label: 'Teams', to: '/teams' },
+    { label: 'Services', to: '/services' }
+  ]
+
+  if (enableProducts.value) {
+    items.unshift({ label: 'Platforms', to: '/platforms' })
+  }
+
+  return items
+})
 
 const { enabled: isAuthEnabled, isAuthenticated, user, login, logout } = useAuth()
 

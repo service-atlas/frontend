@@ -1,13 +1,27 @@
+<script setup lang="ts">
+const config = useRuntimeConfig()
+const enableProducts = computed(() => config.public.enableProducts)
+
+const menuItems = computed(() => {
+  const items = [
+    { label: 'Reports', icon: 'lucide:bar-chart-3', to: '/reports' },
+    { label: 'Teams', icon: 'lucide:users', to: '/teams' },
+    { label: 'Services', icon: 'lucide:box', to: '/services' }
+  ]
+
+  if (enableProducts.value) {
+    items.unshift({ label: 'Platforms', icon: 'lucide:layout-grid', to: '/platforms' })
+  }
+
+  return items
+})
+</script>
+
 <template>
   <UDropdownMenu
     v-slot="{ open }"
     :modal="false"
-    :items="[
-      { label: 'Platforms', icon: 'lucide:layout-grid', to: '/platforms' },
-      { label: 'Reports', icon: 'lucide:bar-chart-3', to: '/reports' },
-      { label: 'Teams', icon: 'lucide:users', to: '/teams' },
-      { label: 'Services', icon: 'lucide:box', to: '/services' }
-    ]"
+    :items="menuItems"
     :content="{ align: 'start' }"
     :ui="{ content: 'min-w-fit' }"
     size="xs"
