@@ -6,7 +6,6 @@ export interface FlowDto {
   description?: string
   product_id: string | number
   step_count?: number
-  status?: string
   updated?: string
   created?: string
 }
@@ -41,7 +40,7 @@ export function useFlows() {
     return data
   }
 
-  async function updateFlow(id: string, payload: { name: string; description?: string; status?: string }) {
+  async function updateFlow(id: string, payload: { name: string; description?: string }) {
     await apiFetch(`/flows/${id}`, { method: 'PUT', body: payload })
   }
 
