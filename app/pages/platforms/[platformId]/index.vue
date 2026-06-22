@@ -5,7 +5,7 @@ import { useProducts } from '~/composables/useProducts'
 import { useAuth } from '~/composables/useAuth'
 
 const route = useRoute()
-const platformId = route.params.platformId as string
+const platformId = computed(() => route.params.platformId as string)
 
 const { getPlatform } = usePlatforms()
 const { products, loading, error, fetchProductsByPlatform, createProduct } = useProducts()
@@ -17,8 +17,8 @@ async function loadData() {
   if (!isAuthenticated.value) return
   try {
     const [p] = await Promise.all([
-      getPlatform(platformId),
-      fetchProductsByPlatform(platformId)
+      getPlatform(platformId.value),
+      fetchProductsByPlatform(platformId.value)
     ])
     platform.value = p
 
@@ -46,6 +46,10 @@ watch(isAuthenticated, (val) => {
   }
 })
 
+watch(platformId, () => {
+  loadData()
+})
+
 definePageMeta({
   title: 'Platform Details'
 })
@@ -66,11 +70,11 @@ async function handleCreate() {
     const newProduct = await createProduct({
       name: createForm.value.name.trim(),
       description: createForm.value.description.trim(),
-      platform_id: Number.parseInt(platformId, 10)
+      platform_id: Number.parseInt(platformId.value, 10)
     })
     showCreateModal.value = false
     createForm.value = { name: '', description: '' }
-    navigateTo(`/platforms/${platformId}/products/${newProduct.id}`)
+    navigateTo(`/platforms/${platformId.value}/products/${newProduct.id}`)
   } catch (e) {
     console.error('Failed to create product', e)
   } finally {

@@ -6,9 +6,9 @@ import { useFlows, type FlowDto } from '~/composables/useFlows'
 import { useAuth } from '~/composables/useAuth'
 
 const route = useRoute()
-const platformId = route.params.platformId as string
-const productId = route.params.productId as string
-const flowId = route.params.flowId as string
+const platformId = computed(() => route.params.platformId as string)
+const productId = computed(() => route.params.productId as string)
+const flowId = computed(() => route.params.flowId as string)
 
 const { getPlatform } = usePlatforms()
 const { getProduct } = useProducts()
@@ -23,9 +23,9 @@ async function loadData() {
   if (!isAuthenticated.value) return
   try {
     const [plat, prod, fl] = await Promise.all([
-      getPlatform(platformId),
-      getProduct(productId),
-      getFlow(flowId)
+      getPlatform(platformId.value),
+      getProduct(productId.value),
+      getFlow(flowId.value)
     ])
     platform.value = plat
     product.value = prod
@@ -39,10 +39,20 @@ onMounted(() => {
   loadData()
 })
 
+watch(isAuthenticated, (val) => {
+  if (val) {
+    loadData()
+  }
+})
+
+watch([platformId, productId, flowId], () => {
+  loadData()
+})
+
 const breadcrumbs = computed(() => [
   { label: 'Platforms', to: '/platforms' },
-  { label: platform.value?.name || '...', to: `/platforms/${platformId}` },
-  { label: product.value?.name || '...', to: `/platforms/${platformId}/products/${productId}` },
+  { label: platform.value?.name || '...', to: `/platforms/${platformId.value}` },
+  { label: product.value?.name || '...', to: `/platforms/${platformId.value}/products/${productId.value}` },
   { label: flow.value?.name || 'Loading...' }
 ])
 </script>

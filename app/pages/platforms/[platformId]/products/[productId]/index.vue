@@ -6,8 +6,8 @@ import { useFlows } from '~/composables/useFlows'
 import { useAuth } from '~/composables/useAuth'
 
 const route = useRoute()
-const platformId = route.params.platformId as string
-const productId = route.params.productId as string
+const platformId = computed(() => route.params.platformId as string)
+const productId = computed(() => route.params.productId as string)
 
 const { getPlatform } = usePlatforms()
 const { getProduct } = useProducts()
@@ -21,9 +21,9 @@ async function loadData() {
   if (!isAuthenticated.value) return
   try {
     const [plat, prod] = await Promise.all([
-      getPlatform(platformId),
-      getProduct(productId),
-      fetchFlowsByProduct(productId)
+      getPlatform(platformId.value),
+      getProduct(productId.value),
+      fetchFlowsByProduct(productId.value)
     ])
     platform.value = plat
     product.value = prod
@@ -52,6 +52,10 @@ watch(isAuthenticated, (val) => {
   }
 })
 
+watch([platformId, productId], () => {
+  loadData()
+})
+
 definePageMeta({
   title: 'Product Details'
 })
@@ -69,13 +73,13 @@ async function handleCreate() {
   if (!canCreate.value) return
   isCreating.value = true
   try {
-    const newFlow = await createFlow(Number.parseInt(productId, 10), {
+    const newFlow = await createFlow(Number.parseInt(productId.value, 10), {
       name: createForm.value.name.trim(),
       description: createForm.value.description.trim()
     })
     showCreateModal.value = false
     createForm.value = { name: '', description: '' }
-    navigateTo(`/platforms/${platformId}/products/${productId}/flows/${newFlow.id}`)
+    navigateTo(`/platforms/${platformId.value}/products/${productId.value}/flows/${newFlow.id}`)
   } catch (e) {
     console.error('Failed to create flow', e)
   } finally {
@@ -85,7 +89,7 @@ async function handleCreate() {
 
 const breadcrumbs = computed(() => [
   { label: 'Platforms', to: '/platforms' },
-  { label: platform.value?.name || '...', to: `/platforms/${platformId}` },
+  { label: platform.value?.name || '...', to: `/platforms/${platformId.value}` },
   { label: product.value?.name || 'Loading...' }
 ])
 </script>
