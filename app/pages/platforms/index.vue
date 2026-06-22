@@ -11,7 +11,12 @@ const { platforms, loading, error, fetchPlatforms, createPlatform } = usePlatfor
 const { isAuthenticated } = useAuth()
 
 async function loadPlatforms() {
-  await fetchPlatforms()
+  try {
+    await fetchPlatforms()
+  } catch (e) {
+    console.error('Failed to load platforms', e)
+    return
+  }
   // Fetch product counts for each platform
   await Promise.all(platforms.value.map(async (platform) => {
     try {
