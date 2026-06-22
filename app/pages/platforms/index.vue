@@ -66,7 +66,7 @@ async function handleCreate() {
 </script>
 
 <template>
-  <div class="space-y-6">
+  <div class="space-y-6 mx-[2%]">
     <div class="flex items-center justify-between">
       <div>
         <h1 class="text-3xl font-bold tracking-tight">

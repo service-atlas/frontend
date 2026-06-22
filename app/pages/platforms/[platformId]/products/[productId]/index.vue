@@ -91,7 +91,7 @@ const breadcrumbs = computed(() => [
 </script>
 
 <template>
-  <div class="space-y-6">
+  <div class="space-y-6 mx-[2%]">
     <UBreadcrumb :links="breadcrumbs" />
 
     <div class="flex items-center justify-between">
