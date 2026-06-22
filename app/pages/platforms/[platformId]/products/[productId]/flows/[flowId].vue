@@ -60,11 +60,6 @@ const breadcrumbs = computed(() => [
           {{ flow.description }}
         </p>
       </div>
-      <div class="flex gap-2">
-        <UBadge :color="flow?.status === 'active' ? 'green' : 'gray'" variant="soft" class="capitalize">
-          {{ flow?.status || 'draft' }}
-        </UBadge>
-      </div>
     </div>
 
     <UCard>

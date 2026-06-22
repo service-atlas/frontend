@@ -153,9 +153,6 @@ const breadcrumbs = computed(() => [
               <UBadge color="neutral" variant="soft" size="sm">
                 {{ flow.step_count || 0 }} steps
               </UBadge>
-              <UBadge :color="flow.status === 'active' ? 'green' : 'gray'" variant="subtle" size="sm" class="capitalize">
-                {{ flow.status || 'draft' }}
-              </UBadge>
             </div>
             <p v-if="flow.description" class="text-sm text-muted-foreground truncate mt-1">
               {{ flow.description }}
