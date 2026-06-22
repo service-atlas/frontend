@@ -22,7 +22,7 @@ const links = computed(() => {
   ]
 
   if (enableProducts.value) {
-    baseLinks.splice(1, 0, {
+    baseLinks.unshift({
       label: 'Platforms',
       icon: 'lucide:layers',
       to: '/platforms'
