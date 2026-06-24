@@ -82,13 +82,64 @@ async function fetchSteps() {
 }
 
 const graphElements = computed(() => {
-  const nodes = new Set<string>()
-  const elements: cytoscape.ElementDefinition[] = []
+  if (steps.value.length === 0) return []
+
+  // 1. Build adjacency list
+  const adj = new Map<string, Array<{ to: string, step: FlowStep }>>()
+  const allNodes = new Set<string>()
+  const nodesWithInbound = new Set<string>()
 
   steps.value.forEach((step) => {
-    nodes.add(step.current)
-    nodes.add(step.next)
+    allNodes.add(step.current)
+    allNodes.add(step.next)
+    nodesWithInbound.add(step.next)
 
+    if (!adj.has(step.current)) adj.set(step.current, [])
+    adj.get(step.current)!.push({ to: step.next, step })
+  })
+
+  // 2. Find root(s): Nodes with outbound but no inbound edges
+  let roots = Array.from(allNodes).filter(id => !nodesWithInbound.has(id))
+
+  // Fallback: if there are no roots (e.g. a cycle), use the first step's current
+  if (roots.length === 0 && steps.value.length > 0) {
+    roots = [steps.value[0].current]
+  }
+
+  // 3. BFS to find reachable nodes and edges
+  const reachableNodes = new Set<string>()
+  const reachableEdges = new Set<number>()
+  const queue = [...roots]
+  roots.forEach(r => reachableNodes.add(r))
+
+  while (queue.length > 0) {
+    const curr = queue.shift()!
+    const neighbors = adj.get(curr) || []
+    neighbors.forEach(({ to, step }) => {
+      reachableEdges.add(step.id)
+      if (!reachableNodes.has(to)) {
+        reachableNodes.add(to)
+        queue.push(to)
+      }
+    })
+  }
+
+  // 4. Construct graph elements
+  const elements: cytoscape.ElementDefinition[] = []
+
+  // Add reachable nodes
+  reachableNodes.forEach((id) => {
+    elements.push({
+      group: 'nodes',
+      data: {
+        id,
+        label: getServiceLabel(id)
+      }
+    })
+  })
+
+  // Add reachable edges
+  steps.value.filter(s => reachableEdges.has(s.id)).forEach((step) => {
     elements.push({
       group: 'edges',
       data: {
@@ -100,16 +151,6 @@ const graphElements = computed(() => {
         targetNode: step.next,
         flowId: step.flow_id,
         endpointTarget: step.target
-      }
-    })
-  })
-
-  nodes.forEach((id) => {
-    elements.push({
-      group: 'nodes',
-      data: {
-        id,
-        label: getServiceLabel(id)
       }
     })
   })
@@ -177,11 +218,48 @@ async function handleAddDependency(dependency: { id: string, name: string, type:
 
 async function handleDeleteStep(stepId: number) {
   try {
-    await deleteFlowStep(stepId)
-    steps.value = steps.value.filter(s => s.id !== stepId)
+    const stepToDelete = steps.value.find(s => s.id === stepId)
+    if (!stepToDelete) return
+
+    const sourceNodeId = stepToDelete.current
+    const targetNodeId = stepToDelete.next
+
+    // 1. Find all steps that are downstream from the target node of the step being deleted
+    const stepsToDelete = [stepId]
+    const queue = [targetNodeId]
+    const visitedNodes = new Set<string>()
+    visitedNodes.add(targetNodeId)
+
+    while (queue.length > 0) {
+      const curr = queue.shift()!
+      // Find all steps originating from this node
+      const downstreamSteps = steps.value.filter(s => s.current === curr)
+      downstreamSteps.forEach((s) => {
+        if (!stepsToDelete.includes(s.id)) {
+          stepsToDelete.push(s.id)
+          if (!visitedNodes.has(s.next)) {
+            visitedNodes.add(s.next)
+            queue.push(s.next)
+          }
+        }
+      })
+    }
+
+    // 2. Delete all identified steps from backend
+    // Note: In a real app, we might want a bulk delete endpoint,
+    // but here we follow the existing pattern.
+    await Promise.all(stepsToDelete.map(id => deleteFlowStep(id)))
+
+    // 3. Update local state
+    steps.value = steps.value.filter(s => !stepsToDelete.includes(s.id))
     selectedEdge.value = null
+
+    // Select the source node of the deleted step so the user can continue from there
+    if (sourceNodeId) {
+      selectedNodeId.value = sourceNodeId
+    }
   } catch (err: unknown) {
-    console.error('Failed to delete flow step', err)
+    console.error('Failed to delete flow steps', err)
   }
 }
 
