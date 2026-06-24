@@ -16,7 +16,7 @@ const flowId = computed(() => route.params.flowId as string)
 
 const { getPlatform } = usePlatforms()
 const { getProduct } = useProducts()
-const { getFlow } = useFlows()
+const { getFlow, deleteFlowStep } = useFlows()
 const { fetchServices, services } = useServices()
 const { isAuthenticated } = useAuth()
 const { apiFetch } = useProductsApi()
@@ -163,6 +163,16 @@ async function handleAddDependency(dependency: { id: string, name: string, type:
     console.error('Failed to add flow step', err)
   } finally {
     isAddingStep.value = false
+  }
+}
+
+async function handleDeleteStep(stepId: number) {
+  try {
+    await deleteFlowStep(stepId)
+    steps.value = steps.value.filter(s => s.id !== stepId)
+    selectedEdge.value = null
+  } catch (err: unknown) {
+    console.error('Failed to delete flow step', err)
   }
 }
 
@@ -323,7 +333,12 @@ const finalElements = computed(() => {
             />
           </div>
 
-          <FlowStepDetailsPanel v-else-if="selectedEdge" :step="selectedEdge" :get-service-label="getServiceLabel" />
+          <FlowStepDetailsPanel
+            v-else-if="selectedEdge"
+            :step="selectedEdge"
+            :get-service-label="getServiceLabel"
+            @delete="handleDeleteStep"
+          />
         </UCard>
 
         <UCard v-else class="flex-1 flex flex-col items-center justify-center text-center p-6 italic text-muted-foreground">

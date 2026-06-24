@@ -8,21 +8,45 @@ interface FlowStepData {
   targetNode: string
 }
 
-defineProps<{
+const props = defineProps<{
   step: FlowStepData | null
   getServiceLabel?: (id: string) => string
 }>()
+
+const emit = defineEmits(['delete'])
+const isDeleting = ref(false)
+
+async function handleDelete() {
+  isDeleting.value = true
+  try {
+    emit('delete', props.step?.stepId)
+  } finally {
+    isDeleting.value = false
+  }
+}
 </script>
 
 <template>
   <div v-if="step" class="p-4 space-y-6">
-    <div class="space-y-1">
-      <h4 class="text-sm font-semibold text-gray-900 dark:text-gray-100 uppercase tracking-wider">
-        Step Details
-      </h4>
-      <p class="text-xs text-muted-foreground">
-        ID: {{ step.stepId }}
-      </p>
+    <div class="flex items-center justify-between">
+      <div class="space-y-1">
+        <h4 class="text-sm font-semibold text-gray-900 dark:text-gray-100 uppercase tracking-wider">
+          Step Details
+        </h4>
+        <p class="text-xs text-muted-foreground">
+          ID: {{ step.stepId }}
+        </p>
+      </div>
+      <UButton
+        color="error"
+        variant="subtle"
+        icon="i-heroicons-trash"
+        size="sm"
+        :loading="isDeleting"
+        @click="handleDelete"
+      >
+        Delete Step
+      </UButton>
     </div>
 
     <div class="grid grid-cols-2 gap-4">
