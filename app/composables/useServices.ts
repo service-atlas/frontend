@@ -21,6 +21,7 @@ export function useServices() {
   const error = ref<string | null>(null)
 
   async function fetchServices() {
+    if (services.value.length > 0) return
     loading.value = true
     error.value = null
     try {

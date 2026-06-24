@@ -20,6 +20,7 @@ const { getFlow, deleteFlowStep } = useFlows()
 const { fetchServices, services } = useServices()
 const { isAuthenticated } = useAuth()
 const { apiFetch } = useProductsApi()
+const toast = useToast()
 
 const platform = ref<PlatformDto | null>(null)
 const product = ref<ProductDto | null>(null)
@@ -209,8 +210,18 @@ async function handleAddDependency(dependency: { id: string, name: string, type:
     steps.value.push(newStep)
     showAddPicker.value = false
     selectedNodeId.value = dependency.id // Select the newly added node
+    toast.add({
+      title: 'Step added',
+      description: `Connection to ${dependency.name} created successfully.`,
+      color: 'success'
+    })
   } catch (err: unknown) {
     console.error('Failed to add flow step', err)
+    toast.add({
+      title: 'Failed to add step',
+      description: err instanceof Error ? err.message : 'An unexpected error occurred.',
+      color: 'error'
+    })
   } finally {
     isAddingStep.value = false
   }
@@ -258,8 +269,21 @@ async function handleDeleteStep(stepId: number) {
     if (sourceNodeId) {
       selectedNodeId.value = sourceNodeId
     }
+
+    toast.add({
+      title: stepsToDelete.length > 1 ? 'Steps deleted' : 'Step deleted',
+      description: stepsToDelete.length > 1
+        ? `${stepsToDelete.length} steps were removed from the flow.`
+        : 'The connection was removed from the flow.',
+      color: 'success'
+    })
   } catch (err: unknown) {
     console.error('Failed to delete flow steps', err)
+    toast.add({
+      title: 'Failed to delete',
+      description: err instanceof Error ? err.message : 'An unexpected error occurred.',
+      color: 'error'
+    })
   }
 }
 
@@ -285,9 +309,9 @@ async function loadData() {
       getPlatform(platformId.value),
       getProduct(productId.value),
       getFlow(flowId.value),
-      fetchServices()
+      fetchServices(),
+      fetchSteps()
     ])
-    await fetchSteps()
     platform.value = plat
     product.value = prod
     flow.value = fl
