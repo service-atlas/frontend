@@ -3,6 +3,7 @@ import { ref, onMounted, computed, watch } from 'vue'
 import { usePlatforms, type PlatformDto } from '~/composables/usePlatforms'
 import { useProducts, type ProductDto } from '~/composables/useProducts'
 import { useFlows, type FlowDto } from '~/composables/useFlows'
+import { useServices } from '~/composables/useServices'
 import { useAuth } from '~/composables/useAuth'
 import FlowGraphCanvas from '~/components/flows/FlowGraphCanvas.vue'
 import AddNextDependencyPicker from '~/components/flows/AddNextDependencyPicker.vue'
@@ -16,6 +17,7 @@ const flowId = computed(() => route.params.flowId as string)
 const { getPlatform } = usePlatforms()
 const { getProduct } = useProducts()
 const { getFlow } = useFlows()
+const { fetchServices, services } = useServices()
 const { isAuthenticated } = useAuth()
 const { apiFetch } = useProductsApi()
 
@@ -37,6 +39,18 @@ interface FlowStep {
 const steps = ref<FlowStep[]>([])
 const loading = ref(false)
 const error = ref<string | null>(null)
+
+const serviceMap = computed(() => {
+  const map = new Map<string, string>()
+  services.value.forEach((s) => {
+    map.set(s.id, s.name)
+  })
+  return map
+})
+
+function getServiceLabel(id: string) {
+  return serviceMap.value.get(id) || id.split('-')[0]
+}
 
 interface EdgeData {
   id: string
@@ -95,7 +109,7 @@ const graphElements = computed(() => {
       group: 'nodes',
       data: {
         id,
-        label: id.split('-')[0] // Short label for now
+        label: getServiceLabel(id)
       }
     })
   })
@@ -173,7 +187,8 @@ async function loadData() {
     const [plat, prod, fl] = await Promise.all([
       getPlatform(platformId.value),
       getProduct(productId.value),
-      getFlow(flowId.value)
+      getFlow(flowId.value),
+      fetchServices()
     ])
     await fetchSteps()
     platform.value = plat
@@ -213,7 +228,7 @@ const finalElements = computed(() => {
       group: 'nodes',
       data: {
         id: selectedNodeId.value,
-        label: selectedNodeId.value.split('-')[0]
+        label: getServiceLabel(selectedNodeId.value)
       }
     })
   }
@@ -292,9 +307,12 @@ const finalElements = computed(() => {
 
           <div v-if="selectedNodeId" class="p-4 space-y-4">
             <div class="space-y-1">
-              <label class="text-xs font-medium text-muted-foreground uppercase">Service ID</label>
-              <div class="text-sm font-mono break-all bg-gray-50 dark:bg-gray-800 p-2 rounded border border-gray-100 dark:border-gray-700">
-                {{ selectedNodeId }}
+              <label class="text-xs font-medium text-muted-foreground uppercase">Service</label>
+              <div class="text-sm font-semibold break-all bg-gray-50 dark:bg-gray-800 p-2 rounded border border-gray-100 dark:border-gray-700">
+                {{ getServiceLabel(selectedNodeId) }}
+              </div>
+              <div class="text-[10px] font-mono text-muted-foreground truncate" :title="selectedNodeId">
+                ID: {{ selectedNodeId }}
               </div>
             </div>
             <UButton
@@ -305,7 +323,7 @@ const finalElements = computed(() => {
             />
           </div>
 
-          <FlowStepDetailsPanel v-else-if="selectedEdge" :step="selectedEdge" />
+          <FlowStepDetailsPanel v-else-if="selectedEdge" :step="selectedEdge" :get-service-label="getServiceLabel" />
         </UCard>
 
         <UCard v-else class="flex-1 flex flex-col items-center justify-center text-center p-6 italic text-muted-foreground">

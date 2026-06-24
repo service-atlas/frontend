@@ -10,6 +10,7 @@ interface FlowStepData {
 
 defineProps<{
   step: FlowStepData | null
+  getServiceLabel?: (id: string) => string
 }>()
 </script>
 
@@ -26,15 +27,21 @@ defineProps<{
 
     <div class="grid grid-cols-2 gap-4">
       <div class="space-y-1">
-        <label class="text-xs font-medium text-muted-foreground">Source Node</label>
-        <div class="text-sm font-mono truncate bg-gray-50 dark:bg-gray-800 p-2 rounded border border-gray-100 dark:border-gray-700">
-          {{ step.source }}
+        <label class="text-xs font-medium text-muted-foreground">Source</label>
+        <div class="text-sm font-semibold truncate bg-gray-50 dark:bg-gray-800 p-2 rounded border border-gray-100 dark:border-gray-700">
+          {{ getServiceLabel ? getServiceLabel(step.source) : step.source }}
+        </div>
+        <div class="text-[10px] font-mono text-muted-foreground truncate" :title="step.source">
+          ID: {{ step.source }}
         </div>
       </div>
       <div class="space-y-1">
-        <label class="text-xs font-medium text-muted-foreground">Target Node</label>
-        <div class="text-sm font-mono truncate bg-gray-50 dark:bg-gray-800 p-2 rounded border border-gray-100 dark:border-gray-700">
-          {{ step.targetNode }}
+        <label class="text-xs font-medium text-muted-foreground">Target</label>
+        <div class="text-sm font-semibold truncate bg-gray-50 dark:bg-gray-800 p-2 rounded border border-gray-100 dark:border-gray-700">
+          {{ getServiceLabel ? getServiceLabel(step.targetNode) : step.targetNode }}
+        </div>
+        <div class="text-[10px] font-mono text-muted-foreground truncate" :title="step.targetNode">
+          ID: {{ step.targetNode }}
         </div>
       </div>
     </div>
