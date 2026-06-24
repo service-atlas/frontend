@@ -52,6 +52,10 @@ export function useFlows() {
     await apiFetch(`/flow-steps/${stepId}`, { method: 'DELETE' })
   }
 
+  async function updateFlowStep(stepId: number | string, payload: { protocol?: string | null; target?: string | null }) {
+    return await apiFetch(`/flow-steps/${stepId}`, { method: 'PATCH', body: payload })
+  }
+
   return {
     flows,
     loading,
@@ -61,6 +65,7 @@ export function useFlows() {
     createFlow,
     updateFlow,
     deleteFlow,
-    deleteFlowStep
+    deleteFlowStep,
+    updateFlowStep
   }
 }

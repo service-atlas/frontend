@@ -16,7 +16,7 @@ const flowId = computed(() => route.params.flowId as string)
 
 const { getPlatform } = usePlatforms()
 const { getProduct } = useProducts()
-const { getFlow, deleteFlowStep } = useFlows()
+const { getFlow, deleteFlowStep, updateFlowStep } = useFlows()
 const { fetchServices, services } = useServices()
 const { isAuthenticated } = useAuth()
 const { apiFetch } = useProductsApi()
@@ -303,9 +303,41 @@ function handleEdgeClick(edgeData: EdgeData) {
   selectedNodeId.value = null
 }
 
-function handleCanvasClick() {
-  selectedNodeId.value = null
-  selectedEdge.value = null
+async function handleUpdateStep(payload: { stepId: number, protocol: string | null, target: string | null }) {
+  try {
+    const updatedStep = await updateFlowStep(payload.stepId, {
+      protocol: payload.protocol,
+      target: payload.target
+    })
+
+    // Update local state
+    const index = steps.value.findIndex(s => s.id === payload.stepId)
+    if (index !== -1) {
+      steps.value[index] = updatedStep
+    }
+
+    // Update selectedEdge if it matches
+    if (selectedEdge.value && selectedEdge.value.stepId === payload.stepId) {
+      selectedEdge.value = {
+        ...selectedEdge.value,
+        protocol: updatedStep.protocol,
+        endpointTarget: updatedStep.target
+      }
+    }
+
+    toast.add({
+      title: 'Step updated',
+      description: 'Metadata saved successfully.',
+      color: 'success'
+    })
+  } catch (err: unknown) {
+    console.error('Failed to update flow step', err)
+    toast.add({
+      title: 'Failed to update',
+      description: err instanceof Error ? err.message : 'An unexpected error occurred.',
+      color: 'error'
+    })
+  }
 }
 
 async function loadData() {
@@ -413,7 +445,7 @@ const finalElements = computed(() => {
           @canvas-click="handleCanvasClick"
         />
 
-        <UModal v-model:open="showInstructions">
+        <UModal v-model:open="showInstructions" :prevent-close="false" :ui="{ content: 'max-h-[90vh] flex flex-col' }">
           <template #header>
             Welcome to the Flow Builder!
           </template>
@@ -426,6 +458,9 @@ const finalElements = computed(() => {
                 </li>
                 <li>
                   <span class="font-medium text-(--ui-text)">Delete Steps:</span> Simply click on any connection (edge) between nodes to select it, then use the delete option in the sidebar.
+                </li>
+                <li>
+                  <span class="font-medium text-(--ui-text)">Metadata:</span> You can optionally add protocol (e.g. HTTP, SQL) and target (e.g. endpoint, table) details to connections for enrichment.
                 </li>
               </ul>
               <p class="text-sm">
@@ -494,6 +529,7 @@ const finalElements = computed(() => {
             :step="selectedEdge"
             :get-service-label="getServiceLabel"
             @delete="handleDeleteStep"
+            @save="handleUpdateStep"
           />
         </UCard>
 
