@@ -157,7 +157,7 @@ const graphElements = computed(() => {
         protocol: step.protocol,
         targetNode: step.next,
         flowId: step.flow_id,
-        endpointTarget: step.target
+        endpointTarget: step.target || ''
       }
     })
   })
@@ -513,7 +513,7 @@ const finalElements = computed(() => {
                 {{ getServiceLabel(selectedNodeId) }}
               </div>
               <div class="text-[10px] font-mono text-muted-foreground truncate" :title="selectedNodeId">
-                ID: {{ selectedNodeId }}
+                {{ selectedNodeId }}
               </div>
             </div>
             <UButton

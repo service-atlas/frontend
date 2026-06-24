@@ -3,7 +3,7 @@ interface FlowStepData {
   stepId: number
   flowId: number
   protocol: string | null
-  target: string | null
+  endpointTarget: string | null
   source: string
   targetNode: string
 }
@@ -25,7 +25,7 @@ const target = ref<string | null>(null)
 watch(() => props.step, (newStep) => {
   if (newStep) {
     protocol.value = newStep.protocol
-    target.value = newStep.target
+    target.value = newStep.endpointTarget
   }
 }, { immediate: true })
 
@@ -91,7 +91,7 @@ const targetExamples = {
           {{ getServiceLabel ? getServiceLabel(step.source) : step.source }}
         </div>
         <div class="text-[10px] font-mono text-muted-foreground truncate" :title="step.source">
-          ID: {{ step.source }}
+          {{ step.source }}
         </div>
       </div>
       <div class="space-y-1">
@@ -100,7 +100,7 @@ const targetExamples = {
           {{ getServiceLabel ? getServiceLabel(step.targetNode) : step.targetNode }}
         </div>
         <div class="text-[10px] font-mono text-muted-foreground truncate" :title="step.targetNode">
-          ID: {{ step.targetNode }}
+          {{ step.targetNode }}
         </div>
       </div>
     </div>
@@ -125,7 +125,7 @@ const targetExamples = {
         </p>
       </div>
 
-      <div class="flex justify-start pt-2">
+      <div class="pt-2">
         <UButton
           color="primary"
           icon="i-heroicons-check"
