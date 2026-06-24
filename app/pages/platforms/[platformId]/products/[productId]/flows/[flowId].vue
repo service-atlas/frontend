@@ -120,6 +120,15 @@ const graphElements = computed(() => {
 async function handleAddDependency(dependency: { id: string, name: string, type: string }) {
   if (!flow.value) return
 
+  // Ensure the service is in our local list so labels resolve immediately
+  if (!services.value.find(s => s.id === dependency.id)) {
+    services.value.push({
+      id: dependency.id,
+      name: dependency.name,
+      type: dependency.type
+    })
+  }
+
   isAddingStep.value = true
   try {
     // Re-reading spec: "Add starting item ... The selected item becomes the first node in the graph."
