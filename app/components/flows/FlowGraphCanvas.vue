@@ -41,7 +41,9 @@ const getStyles = (isDark: boolean): cytoscape.Stylesheet[] => [
       'line-color': isDark ? '#475569' : '#cbd5e1',
       'target-arrow-color': isDark ? '#475569' : '#cbd5e1',
       'target-arrow-shape': 'triangle',
-      'curve-style': 'bezier'
+      'curve-style': 'bezier',
+      'overlay-opacity': 0,
+      'hit-weights': 'inner'
     }
   },
   {
@@ -60,6 +62,18 @@ const getStyles = (isDark: boolean): cytoscape.Stylesheet[] => [
     }
   }
 ]
+
+const tooltip = ref<{
+  show: boolean
+  text: string
+  x: number
+  y: number
+} | null>({
+  show: false,
+  text: '',
+  x: 0,
+  y: 0
+})
 
 function initCy() {
   if (!container.value) return
@@ -85,6 +99,30 @@ function initCy() {
   cy.on('tap', (evt) => {
     if (evt.target === cy) {
       emit('canvas-click')
+    }
+  })
+
+  cy.on('mouseover', 'node, edge', (evt) => {
+    if (container.value) {
+      container.value.style.cursor = 'pointer'
+    }
+
+    if (evt.target.isEdge() && tooltip.value) {
+      const position = evt.renderedPosition || (evt as any).renderedPosition
+      tooltip.value.show = true
+      tooltip.value.text = 'Click to manage connection'
+      tooltip.value.x = position.x
+      tooltip.value.y = position.y - 10
+    }
+  })
+
+  cy.on('mouseout', 'node, edge', (evt) => {
+    if (container.value) {
+      container.value.style.cursor = 'default'
+    }
+
+    if (evt.target.isEdge() && tooltip.value) {
+      tooltip.value.show = false
     }
   })
 }
@@ -121,5 +159,14 @@ defineExpose({
 </script>
 
 <template>
-  <div ref="container" class="w-full h-full min-h-[500px] bg-gray-50 dark:bg-gray-900 rounded-lg overflow-hidden border border-gray-200 dark:border-gray-800" />
+  <div class="relative w-full h-full min-h-[500px]">
+    <div ref="container" class="w-full h-full bg-gray-50 dark:bg-gray-900 rounded-lg overflow-hidden border border-gray-200 dark:border-gray-800" />
+    <div
+      v-if="tooltip?.show"
+      class="absolute z-50 px-2 py-1 text-xs font-medium text-white bg-gray-900 rounded shadow-sm pointer-events-none -translate-x-1/2 -translate-y-full"
+      :style="{ left: `${tooltip.x}px`, top: `${tooltip.y}px` }"
+    >
+      {{ tooltip.text }}
+    </div>
+  </div>
 </template>
