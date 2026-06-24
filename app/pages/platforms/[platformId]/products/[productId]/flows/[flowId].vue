@@ -68,6 +68,12 @@ const selectedNodeId = ref<string | null>(null)
 const selectedEdge = ref<EdgeData | null>(null)
 const showAddPicker = ref(false)
 const isAddingStep = ref(false)
+const showInstructions = ref(false)
+
+function dismissInstructions() {
+  showInstructions.value = false
+  localStorage.setItem('flow-builder-instructions-dismissed', 'true')
+}
 
 async function fetchSteps() {
   loading.value = true
@@ -322,6 +328,9 @@ async function loadData() {
 
 onMounted(() => {
   loadData()
+  if (!localStorage.getItem('flow-builder-instructions-dismissed')) {
+    showInstructions.value = true
+  }
 })
 
 watch(isAuthenticated, (val) => {
@@ -372,6 +381,13 @@ const finalElements = computed(() => {
       </div>
       <div class="flex gap-2">
         <UButton
+          icon="i-heroicons-question-mark-circle"
+          color="neutral"
+          variant="ghost"
+          label="Help"
+          @click="showInstructions = true"
+        />
+        <UButton
           v-if="selectedNodeId"
           icon="i-heroicons-plus"
           label="Add Next"
@@ -396,6 +412,35 @@ const finalElements = computed(() => {
           @edge-click="handleEdgeClick"
           @canvas-click="handleCanvasClick"
         />
+
+        <UModal v-model:open="showInstructions">
+          <template #header>
+            Welcome to the Flow Builder!
+          </template>
+          <template #body>
+            <div class="space-y-4">
+              <p>Here's how to get started with building your service flow:</p>
+              <ul class="list-disc list-inside space-y-2 text-sm text-(--ui-text-muted)">
+                <li>
+                  <span class="font-medium text-(--ui-text)">Add Nodes:</span> Click "Add starting item" to begin, or select an existing node and click "Add Next" to build your chain.
+                </li>
+                <li>
+                  <span class="font-medium text-(--ui-text)">Delete Steps:</span> Simply click on any connection (edge) between nodes to select it, then use the delete option in the sidebar.
+                </li>
+              </ul>
+              <p class="text-sm">
+                It's that simple! Happy building.
+              </p>
+            </div>
+          </template>
+          <template #footer>
+            <UButton
+              label="Got it!"
+              color="primary"
+              @click="dismissInstructions"
+            />
+          </template>
+        </UModal>
 
         <div v-if="loading" class="absolute inset-0 flex items-center justify-center bg-white/50 dark:bg-black/50 z-10">
           <UIcon name="i-heroicons-arrow-path" class="animate-spin h-8 w-8 text-primary" />
