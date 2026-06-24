@@ -18,7 +18,7 @@ const emit = defineEmits(['delete', 'save'])
 const isDeleting = ref(false)
 const isSaving = ref(false)
 
-const protocols = ['HTTP', 'gRPC', 'SQL', 'Kafka', 'GraphQL', 'AMQP']
+const protocols = ['HTTP', 'gRPC', 'SQL', 'Kafka', 'GraphQL', 'AMQP', 'TCP', 'UDP']
 const protocol = ref<string | null>(null)
 const target = ref<string | null>(null)
 
