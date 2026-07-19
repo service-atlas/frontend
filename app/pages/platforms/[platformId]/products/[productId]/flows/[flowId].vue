@@ -16,7 +16,7 @@ const flowId = computed(() => route.params.flowId as string)
 
 const { getPlatform } = usePlatforms()
 const { getProduct } = useProducts()
-const { getFlow, deleteFlowStep, updateFlowStep } = useFlows()
+const { getFlow } = useFlows()
 const { fetchServices, services } = useServices()
 const { isAuthenticated } = useAuth()
 const { apiFetch } = useProductsApi()
@@ -233,7 +233,7 @@ async function handleAddDependency(dependency: { id: string, name: string, type:
   }
 }
 
-async function handleDeleteStep(stepId: number) {
+/* async function handleDeleteStep(stepId: number) {
   try {
     const stepToDelete = steps.value.find(s => s.id === stepId)
     if (!stepToDelete) return
@@ -291,7 +291,7 @@ async function handleDeleteStep(stepId: number) {
       color: 'error'
     })
   }
-}
+} */
 
 function handleNodeClick(nodeData: { id: string }) {
   selectedNodeId.value = nodeData.id
@@ -303,7 +303,7 @@ function handleEdgeClick(edgeData: EdgeData) {
   selectedNodeId.value = null
 }
 
-async function handleUpdateStep(payload: { stepId: number, protocol: string | null, target: string | null }) {
+/* async function handleUpdateStep(payload: { stepId: number, protocol: string | null, target: string | null }) {
   try {
     const updatedStep = await updateFlowStep(payload.stepId, {
       protocol: payload.protocol,
@@ -338,7 +338,7 @@ async function handleUpdateStep(payload: { stepId: number, protocol: string | nu
       color: 'error'
     })
   }
-}
+} */
 
 async function loadData() {
   if (!isAuthenticated.value) return
@@ -456,12 +456,12 @@ const finalElements = computed(() => {
                 <li>
                   <span class="font-medium text-(--ui-text)">Add Nodes:</span> Click "Add starting item" to begin, or select an existing node and click "Add Next" to build your chain.
                 </li>
-                <li>
+                <!-- <li>
                   <span class="font-medium text-(--ui-text)">Delete Steps:</span> Simply click on any connection (edge) between nodes to select it, then use the delete option in the sidebar.
-                </li>
-                <li>
-                  <span class="font-medium text-(--ui-text)">Metadata:</span> You can optionally add protocol (e.g. HTTP, SQL) and target (e.g. endpoint, table) details to connections for enrichment.
-                </li>
+                </li> -->
+                <!-- <li>
+                  <span class="font-medium text-(--ui-text)">Metadata:</span> Protocol and target details are currently disabled.
+                </li> -->
               </ul>
               <p class="text-sm">
                 It's that simple! Happy building.
@@ -528,8 +528,6 @@ const finalElements = computed(() => {
             v-else-if="selectedEdge"
             :step="selectedEdge"
             :get-service-label="getServiceLabel"
-            @delete="handleDeleteStep"
-            @save="handleUpdateStep"
           />
         </UCard>
 

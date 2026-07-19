@@ -48,13 +48,13 @@ export function useFlows() {
     await apiFetch(`/flows/${id}`, { method: 'DELETE' })
   }
 
-  async function deleteFlowStep(stepId: number | string) {
+  /* async function deleteFlowStep(stepId: number | string) {
     await apiFetch(`/flow-steps/${stepId}`, { method: 'DELETE' })
   }
 
   async function updateFlowStep(stepId: number | string, payload: { protocol?: string | null; target?: string | null }) {
     return await apiFetch(`/flow-steps/${stepId}`, { method: 'PATCH', body: payload })
-  }
+  } */
 
   return {
     flows,
@@ -65,7 +65,7 @@ export function useFlows() {
     createFlow,
     updateFlow,
     deleteFlow,
-    deleteFlowStep,
-    updateFlowStep
+    // deleteFlowStep,
+    // updateFlowStep
   }
 }

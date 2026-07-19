@@ -13,12 +13,12 @@ const props = defineProps<{
   getServiceLabel?: (id: string) => string
 }>()
 
-const emit = defineEmits(['delete', 'save'])
+// const emit = defineEmits(['delete', 'save'])
 
-const isDeleting = ref(false)
-const isSaving = ref(false)
+// const isDeleting = ref(false)
+// const isSaving = ref(false)
 
-const protocols = ['HTTP', 'gRPC', 'SQL', 'Kafka', 'GraphQL', 'AMQP', 'TCP', 'UDP']
+// const protocols = ['HTTP', 'gRPC', 'SQL', 'Kafka', 'GraphQL', 'AMQP', 'TCP', 'UDP']
 const protocol = ref<string | null>(null)
 const target = ref<string | null>(null)
 
@@ -29,16 +29,16 @@ watch(() => props.step, (newStep) => {
   }
 }, { immediate: true })
 
-async function handleDelete() {
+/* async function handleDelete() {
   isDeleting.value = true
   try {
     emit('delete', props.step?.stepId)
   } finally {
     isDeleting.value = false
   }
-}
+} */
 
-async function handleSave() {
+/* async function handleSave() {
   if (!props.step) return
   isSaving.value = true
   try {
@@ -50,15 +50,15 @@ async function handleSave() {
   } finally {
     isSaving.value = false
   }
-}
+} */
 
-const targetExamples = {
+/* const targetExamples = {
   HTTP: 'GET /api/item/:id/stock',
   SQL: 'CALL get_inventory()',
   Kafka: 'inventory.stock.updated',
   gRPC: 'InventoryService.GetStock',
   GraphQL: 'query GetCart'
-}
+} */
 </script>
 
 <template>
@@ -72,7 +72,7 @@ const targetExamples = {
           ID: {{ step.stepId }}
         </p>
       </div>
-      <UButton
+      <!-- <UButton
         color="error"
         variant="subtle"
         icon="i-heroicons-trash"
@@ -81,7 +81,7 @@ const targetExamples = {
         @click="handleDelete"
       >
         Delete Step
-      </UButton>
+      </UButton> -->
     </div>
 
     <div class="grid grid-cols-2 gap-4">
@@ -105,7 +105,7 @@ const targetExamples = {
       </div>
     </div>
 
-    <div class="space-y-4 pt-4 border-t border-gray-100 dark:border-gray-800">
+    <!-- <div class="space-y-4 pt-4 border-t border-gray-100 dark:border-gray-800">
       <div class="space-y-1">
         <label class="text-xs font-medium text-muted-foreground">Protocol</label>
         <USelect
@@ -135,6 +135,6 @@ const targetExamples = {
           Save Changes
         </UButton>
       </div>
-    </div>
+    </div> -->
   </div>
 </template>
