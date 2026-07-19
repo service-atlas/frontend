@@ -161,11 +161,6 @@ const breadcrumbs = computed(() => [
           {{ product.description }}
         </p>
       </div>
-      <UButton
-        icon="i-heroicons-plus"
-        label="Add Flow"
-        @click="showCreateModal = true"
-      />
     </div>
 
     <template v-if="flowsError">
