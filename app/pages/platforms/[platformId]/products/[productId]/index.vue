@@ -81,6 +81,19 @@ const createCapabilityForm = ref({
 const isCreatingCapability = ref(false)
 const canCreateCapability = computed(() => createCapabilityForm.value.name.trim().length > 0)
 
+const tabs = computed(() => [
+  {
+    label: 'Flows',
+    icon: 'i-heroicons-arrow-path-rounded-square',
+    slot: 'flows'
+  },
+  {
+    label: 'Capabilities',
+    icon: 'i-heroicons-sparkles',
+    slot: 'capabilities'
+  }
+])
+
 async function handleCreate() {
   if (!canCreate.value) return
   isCreating.value = true
@@ -175,121 +188,123 @@ const breadcrumbs = computed(() => [
       />
     </template>
 
-    <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
-      <!-- Flows Section -->
-      <UCard>
-        <template #header>
-          <div class="flex items-center justify-between">
-            <span class="font-medium">Flows</span>
-            <div class="flex items-center gap-2">
-              <span v-if="flowsLoading" class="text-sm text-muted-foreground">Loading...</span>
-              <UButton
-                icon="i-heroicons-plus"
-                size="xs"
-                variant="ghost"
-                label="Add Flow"
-                @click="showCreateModal = true"
-              />
-            </div>
-          </div>
-        </template>
-
-        <div v-if="!flowsLoading && flows.length === 0" class="flex flex-col items-center justify-center py-12 text-center">
-          <UIcon name="i-heroicons-arrow-path" class="h-12 w-12 text-muted-foreground mb-4" />
-          <h3 class="text-lg font-medium">
-            No flows found
-          </h3>
-          <p class="text-muted-foreground mb-6">
-            Create your first flow for this product.
-          </p>
-          <UButton
-            label="Add Flow"
-            icon="i-heroicons-plus"
-            @click="showCreateModal = true"
-          />
-        </div>
-
-        <div v-else class="flex flex-col divide-y divide-gray-100 dark:divide-gray-800 max-h-[400px] overflow-y-auto">
-          <div v-for="flow in flows" :key="flow.id" class="py-4 flex items-center justify-between hover:bg-gray-50 dark:hover:bg-gray-800/50 transition-colors px-4 -mx-4 cursor-pointer" @click="navigateTo(`/platforms/${platformId}/products/${productId}/flows/${flow.id}`)">
-            <div class="min-w-0 flex-1">
+    <UTabs :items="tabs" class="w-full">
+      <template #flows>
+        <UCard>
+          <template #header>
+            <div class="flex items-center justify-between">
+              <span class="font-medium">Flows</span>
               <div class="flex items-center gap-2">
-                <NuxtLink :to="`/platforms/${platformId}/products/${productId}/flows/${flow.id}`" class="text-primary font-medium hover:underline truncate" @click.stop>
-                  {{ flow.name }}
-                </NuxtLink>
-                <UBadge color="neutral" variant="soft" size="sm">
-                  {{ flow.step_count || 0 }} steps
-                </UBadge>
+                <span v-if="flowsLoading" class="text-sm text-muted-foreground">Loading...</span>
+                <UButton
+                  icon="i-heroicons-plus"
+                  size="xs"
+                  variant="ghost"
+                  label="Add Flow"
+                  @click="showCreateModal = true"
+                />
               </div>
-              <p v-if="flow.description" class="text-sm text-muted-foreground truncate mt-1">
-                {{ flow.description }}
-              </p>
             </div>
-            <div class="flex items-center gap-4 ml-4">
-              <UIcon name="i-heroicons-chevron-right" class="h-5 w-5 text-muted-foreground" />
+          </template>
+
+          <div v-if="!flowsLoading && flows.length === 0" class="flex flex-col items-center justify-center py-12 text-center">
+            <UIcon name="i-heroicons-arrow-path" class="h-12 w-12 text-muted-foreground mb-4" />
+            <h3 class="text-lg font-medium">
+              No flows found
+            </h3>
+            <p class="text-muted-foreground mb-6">
+              Create your first flow for this product.
+            </p>
+            <UButton
+              label="Add Flow"
+              icon="i-heroicons-plus"
+              @click="showCreateModal = true"
+            />
+          </div>
+
+          <div v-else class="flex flex-col divide-y divide-gray-100 dark:divide-gray-800 max-h-[600px] overflow-y-auto overflow-x-hidden">
+            <div v-for="flow in flows" :key="flow.id" class="py-4 flex items-center justify-between hover:bg-gray-50 dark:hover:bg-gray-800/50 transition-colors px-4 cursor-pointer" @click="navigateTo(`/platforms/${platformId}/products/${productId}/flows/${flow.id}`)">
+              <div class="min-w-0 flex-1">
+                <div class="flex items-center gap-2">
+                  <NuxtLink :to="`/platforms/${platformId}/products/${productId}/flows/${flow.id}`" class="text-primary font-medium hover:underline truncate" @click.stop>
+                    {{ flow.name }}
+                  </NuxtLink>
+                  <UBadge color="neutral" variant="soft" size="sm">
+                    {{ flow.step_count || 0 }} steps
+                  </UBadge>
+                </div>
+                <p v-if="flow.description" class="text-sm text-muted-foreground truncate mt-1">
+                  {{ flow.description }}
+                </p>
+              </div>
+              <div class="flex items-center gap-4 ml-4">
+                <UIcon name="i-heroicons-chevron-right" class="h-5 w-5 text-muted-foreground" />
+              </div>
             </div>
           </div>
-        </div>
-      </UCard>
+        </UCard>
+      </template>
 
-      <!-- Capabilities Section -->
-      <UCard>
-        <template #header>
-          <div class="flex items-center justify-between">
-            <span class="font-medium">Capabilities</span>
-            <div class="flex items-center gap-2">
-              <span v-if="capabilitiesLoading" class="text-sm text-muted-foreground">Loading...</span>
-              <UButton
-                icon="i-heroicons-plus"
-                size="xs"
-                variant="ghost"
-                label="Add Capability"
-                @click="showCreateCapabilityModal = true"
-              />
-            </div>
-          </div>
-        </template>
-
-        <div v-if="!capabilitiesLoading && capabilities.length === 0" class="flex flex-col items-center justify-center py-12 text-center">
-          <UIcon name="i-heroicons-sparkles" class="h-12 w-12 text-muted-foreground mb-4" />
-          <h3 class="text-lg font-medium">
-            No capabilities found
-          </h3>
-          <p class="text-muted-foreground mb-6">
-            Define the product functions that this product supports.
-          </p>
-          <UButton
-            label="Add Capability"
-            icon="i-heroicons-plus"
-            @click="showCreateCapabilityModal = true"
-          />
-        </div>
-
-        <div v-else class="flex flex-col divide-y divide-gray-100 dark:divide-gray-800 max-h-[400px] overflow-y-auto">
-          <div v-for="cap in capabilities" :key="cap.id" class="py-4 flex items-center justify-between hover:bg-gray-50 dark:hover:bg-gray-800/50 transition-colors px-4 -mx-4 group">
-            <div class="min-w-0 flex-1">
+      <template #capabilities>
+        <UCard>
+          <template #header>
+            <div class="flex items-center justify-between">
+              <span class="font-medium">Capabilities</span>
               <div class="flex items-center gap-2">
-                <span class="text-primary font-medium truncate">
-                  {{ cap.name }}
-                </span>
+                <span v-if="capabilitiesLoading" class="text-sm text-muted-foreground">Loading...</span>
+                <UButton
+                  icon="i-heroicons-plus"
+                  size="xs"
+                  variant="ghost"
+                  label="Add Capability"
+                  @click="showCreateCapabilityModal = true"
+                />
               </div>
-              <p v-if="cap.description" class="text-sm text-muted-foreground truncate mt-1">
-                {{ cap.description }}
-              </p>
             </div>
-            <div class="flex items-center gap-4 ml-4">
-              <UButton
-                icon="i-heroicons-trash"
-                color="error"
-                variant="ghost"
-                size="xs"
-                class="opacity-0 group-hover:opacity-100 transition-opacity"
-                @click.stop="handleDeleteCapability(cap.id)"
-              />
+          </template>
+
+          <div v-if="!capabilitiesLoading && capabilities.length === 0" class="flex flex-col items-center justify-center py-12 text-center">
+            <UIcon name="i-heroicons-sparkles" class="h-12 w-12 text-muted-foreground mb-4" />
+            <h3 class="text-lg font-medium">
+              No capabilities found
+            </h3>
+            <p class="text-muted-foreground mb-6">
+              Define the product functions that this product supports.
+            </p>
+            <UButton
+              label="Add Capability"
+              icon="i-heroicons-plus"
+              @click="showCreateCapabilityModal = true"
+            />
+          </div>
+
+          <div v-else class="flex flex-col divide-y divide-gray-100 dark:divide-gray-800 max-h-[600px] overflow-y-auto overflow-x-hidden">
+            <div v-for="cap in capabilities" :key="cap.id" class="py-4 flex items-center justify-between hover:bg-gray-50 dark:hover:bg-gray-800/50 transition-colors px-4 group">
+              <div class="min-w-0 flex-1">
+                <div class="flex items-center gap-2">
+                  <span class="text-primary font-medium truncate">
+                    {{ cap.name }}
+                  </span>
+                </div>
+                <p v-if="cap.description" class="text-sm text-muted-foreground truncate mt-1">
+                  {{ cap.description }}
+                </p>
+              </div>
+              <div class="flex items-center gap-4 ml-4">
+                <UButton
+                  icon="i-heroicons-trash"
+                  color="error"
+                  variant="ghost"
+                  size="xs"
+                  class="opacity-0 group-hover:opacity-100 transition-opacity"
+                  @click.stop="handleDeleteCapability(cap.id)"
+                />
+              </div>
             </div>
           </div>
-        </div>
-      </UCard>
-    </div>
+        </UCard>
+      </template>
+    </UTabs>
 
     <UModal v-model:open="showCreateModal" title="Add Flow" description="Create a new flow for this product.">
       <template #body>
