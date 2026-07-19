@@ -13,7 +13,7 @@ const productId = computed(() => route.params.productId as string)
 const { getPlatform } = usePlatforms()
 const { getProduct } = useProducts()
 const { flows, loading: flowsLoading, error: flowsError, fetchFlowsByProduct, createFlow } = useFlows()
-const { capabilities, loading: capabilitiesLoading, error: capabilitiesError, fetchCapabilitiesByProduct, createCapability, deleteCapability } = useCapabilities()
+const { capabilities, loading: capabilitiesLoading, error: capabilitiesError, fetchCapabilitiesByProduct, createCapability, updateCapability, deleteCapability } = useCapabilities()
 const { isAuthenticated } = useAuth()
 
 const platform = ref<PlatformDto | null>(null)
@@ -81,6 +81,16 @@ const createCapabilityForm = ref({
 const isCreatingCapability = ref(false)
 const canCreateCapability = computed(() => createCapabilityForm.value.name.trim().length > 0)
 
+// Edit Capability state
+const showEditCapabilityModal = ref(false)
+const editingCapabilityId = ref<string | number | null>(null)
+const editCapabilityForm = ref({
+  name: '',
+  description: ''
+})
+const isUpdatingCapability = ref(false)
+const canUpdateCapability = computed(() => editCapabilityForm.value.name.trim().length > 0)
+
 const tabs = computed(() => [
   {
     label: 'Flows',
@@ -138,6 +148,34 @@ async function handleDeleteCapability(id: string | number) {
     await fetchCapabilitiesByProduct(productId.value)
   } catch (e) {
     console.error('Failed to delete capability', e)
+  }
+}
+
+function openEditCapability(cap: CapabilityDto) {
+  editingCapabilityId.value = cap.id
+  editCapabilityForm.value = {
+    name: cap.name,
+    description: cap.description || ''
+  }
+  showEditCapabilityModal.value = true
+}
+
+async function handleUpdateCapability() {
+  if (!editingCapabilityId.value || !canUpdateCapability.value) return
+  isUpdatingCapability.value = true
+  try {
+    await updateCapability(editingCapabilityId.value, {
+      name: editCapabilityForm.value.name.trim(),
+      description: editCapabilityForm.value.description.trim()
+    })
+    showEditCapabilityModal.value = false
+    editingCapabilityId.value = null
+    editCapabilityForm.value = { name: '', description: '' }
+    await fetchCapabilitiesByProduct(productId.value)
+  } catch (e) {
+    console.error('Failed to update capability', e)
+  } finally {
+    isUpdatingCapability.value = false
   }
 }
 
@@ -285,12 +323,21 @@ const breadcrumbs = computed(() => [
                   {{ cap.description }}
                 </p>
               </div>
-              <div class="flex items-center gap-4 ml-4">
+              <div class="flex items-center gap-2 ml-4">
+                <UButton
+                  icon="i-heroicons-pencil-square"
+                  color="neutral"
+                  variant="outline"
+                  size="xs"
+                  label="Edit"
+                  @click.stop="openEditCapability(cap)"
+                />
                 <UButton
                   icon="i-heroicons-trash"
                   color="error"
                   variant="outline"
                   size="xs"
+                  label="Delete"
                   @click.stop="handleDeleteCapability(cap.id)"
                 />
               </div>
@@ -335,6 +382,26 @@ const breadcrumbs = computed(() => [
         <div class="flex justify-end gap-x-3">
           <UButton color="neutral" variant="ghost" label="Cancel" @click="showCreateCapabilityModal = false" />
           <UButton color="primary" label="Create" :loading="isCreatingCapability" :disabled="!canCreateCapability" @click="handleCreateCapability" />
+        </div>
+      </template>
+    </UModal>
+
+    <UModal v-model:open="showEditCapabilityModal" title="Edit Capability" description="Update this product function.">
+      <template #body>
+        <div class="space-y-4 py-4">
+          <UFormField label="Name" required>
+            <UInput v-model="editCapabilityForm.name" placeholder="e.g. Account Registration" autofocus />
+          </UFormField>
+          <UFormField label="Description">
+            <UTextarea v-model="editCapabilityForm.description" placeholder="Optional description..." />
+          </UFormField>
+        </div>
+      </template>
+
+      <template #footer>
+        <div class="flex justify-end gap-x-3">
+          <UButton color="neutral" variant="ghost" label="Cancel" @click="showEditCapabilityModal = false" />
+          <UButton color="primary" label="Update Capability" :loading="isUpdatingCapability" :disabled="!canUpdateCapability" @click="handleUpdateCapability" />
         </div>
       </template>
     </UModal>
