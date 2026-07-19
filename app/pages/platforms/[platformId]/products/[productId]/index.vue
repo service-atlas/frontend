@@ -93,14 +93,14 @@ const canUpdateCapability = computed(() => editCapabilityForm.value.name.trim().
 
 const tabs = computed(() => [
   {
-    label: 'Flows',
-    icon: 'i-heroicons-arrow-path-rounded-square',
-    slot: 'flows'
-  },
-  {
     label: 'Capabilities',
     icon: 'i-heroicons-sparkles',
     slot: 'capabilities'
+  },
+  {
+    label: 'Flows',
+    icon: 'i-heroicons-arrow-path-rounded-square',
+    slot: 'flows'
   }
 ])
 
