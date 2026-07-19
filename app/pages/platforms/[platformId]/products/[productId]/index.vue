@@ -289,9 +289,8 @@ const breadcrumbs = computed(() => [
                 <UButton
                   icon="i-heroicons-trash"
                   color="error"
-                  variant="ghost"
+                  variant="outline"
                   size="xs"
-                  class="opacity-0 group-hover:opacity-100 transition-opacity"
                   @click.stop="handleDeleteCapability(cap.id)"
                 />
               </div>
