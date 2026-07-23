@@ -80,8 +80,8 @@ async function fetchSteps() {
   try {
     const data = await apiFetch<FlowStep[]>(`/flows/${flowId.value}/steps`)
     steps.value = Array.isArray(data) ? data : []
-  } catch (error: unknown) {
-    console.error('Failed to load flow steps', error)
+  } catch (err: unknown) {
+    console.error('Failed to load flow steps', err)
     error.value = 'Failed to load flow steps'
   } finally {
     loading.value = false
