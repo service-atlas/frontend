@@ -3,6 +3,7 @@ import { ref, onMounted, computed, watch } from 'vue'
 import { usePlatforms, type PlatformDto } from '~/composables/usePlatforms'
 import { useProducts, type ProductDto } from '~/composables/useProducts'
 import { useFlows } from '~/composables/useFlows'
+import { useCapabilities } from '~/composables/useCapabilities'
 import { useAuth } from '~/composables/useAuth'
 
 const route = useRoute()
@@ -11,7 +12,8 @@ const productId = computed(() => route.params.productId as string)
 
 const { getPlatform } = usePlatforms()
 const { getProduct } = useProducts()
-const { flows, loading, error, fetchFlowsByProduct, createFlow } = useFlows()
+const { flows, loading: flowsLoading, error: flowsError, fetchFlowsByProduct, createFlow } = useFlows()
+const { capabilities, loading: capabilitiesLoading, error: capabilitiesError, fetchCapabilitiesByProduct, createCapability, updateCapability, deleteCapability } = useCapabilities()
 const { isAuthenticated } = useAuth()
 
 const platform = ref<PlatformDto | null>(null)
@@ -23,7 +25,8 @@ async function loadData() {
     const [plat, prod] = await Promise.all([
       getPlatform(platformId.value),
       getProduct(productId.value),
-      fetchFlowsByProduct(productId.value)
+      fetchFlowsByProduct(productId.value),
+      fetchCapabilitiesByProduct(productId.value)
     ])
     platform.value = plat
     product.value = prod
@@ -69,6 +72,38 @@ const createForm = ref({
 const isCreating = ref(false)
 const canCreate = computed(() => createForm.value.name.trim().length > 0)
 
+// Capability modal state
+const showCreateCapabilityModal = ref(false)
+const createCapabilityForm = ref({
+  name: '',
+  description: ''
+})
+const isCreatingCapability = ref(false)
+const canCreateCapability = computed(() => createCapabilityForm.value.name.trim().length > 0)
+
+// Edit Capability state
+const showEditCapabilityModal = ref(false)
+const editingCapabilityId = ref<string | number | null>(null)
+const editCapabilityForm = ref({
+  name: '',
+  description: ''
+})
+const isUpdatingCapability = ref(false)
+const canUpdateCapability = computed(() => editCapabilityForm.value.name.trim().length > 0)
+
+const tabs = computed(() => [
+  {
+    label: 'Capabilities',
+    icon: 'i-heroicons-sparkles',
+    slot: 'capabilities'
+  },
+  {
+    label: 'Flows',
+    icon: 'i-heroicons-arrow-path-rounded-square',
+    slot: 'flows'
+  }
+])
+
 async function handleCreate() {
   if (!canCreate.value) return
   isCreating.value = true
@@ -84,6 +119,63 @@ async function handleCreate() {
     console.error('Failed to create flow', e)
   } finally {
     isCreating.value = false
+  }
+}
+
+async function handleCreateCapability() {
+  if (!canCreateCapability.value) return
+  isCreatingCapability.value = true
+  try {
+    await createCapability({
+      product_id: Number.parseInt(productId.value, 10),
+      name: createCapabilityForm.value.name.trim(),
+      description: createCapabilityForm.value.description.trim()
+    })
+    showCreateCapabilityModal.value = false
+    createCapabilityForm.value = { name: '', description: '' }
+    await fetchCapabilitiesByProduct(productId.value)
+  } catch (e) {
+    console.error('Failed to create capability', e)
+  } finally {
+    isCreatingCapability.value = false
+  }
+}
+
+async function handleDeleteCapability(id: string | number) {
+  if (!confirm('Are you sure you want to delete this capability?')) return
+  try {
+    await deleteCapability(id)
+    await fetchCapabilitiesByProduct(productId.value)
+  } catch (e) {
+    console.error('Failed to delete capability', e)
+  }
+}
+
+function openEditCapability(cap: CapabilityDto) {
+  editingCapabilityId.value = cap.id
+  editCapabilityForm.value = {
+    name: cap.name,
+    description: cap.description || ''
+  }
+  showEditCapabilityModal.value = true
+}
+
+async function handleUpdateCapability() {
+  if (!editingCapabilityId.value || !canUpdateCapability.value) return
+  isUpdatingCapability.value = true
+  try {
+    await updateCapability(editingCapabilityId.value, {
+      name: editCapabilityForm.value.name.trim(),
+      description: editCapabilityForm.value.description.trim()
+    })
+    showEditCapabilityModal.value = false
+    editingCapabilityId.value = null
+    editCapabilityForm.value = { name: '', description: '' }
+    await fetchCapabilitiesByProduct(productId.value)
+  } catch (e) {
+    console.error('Failed to update capability', e)
+  } finally {
+    isUpdatingCapability.value = false
   }
 }
 
@@ -107,67 +199,153 @@ const breadcrumbs = computed(() => [
           {{ product.description }}
         </p>
       </div>
-      <UButton
-        icon="i-heroicons-plus"
-        label="Add Flow"
-        @click="showCreateModal = true"
-      />
     </div>
 
-    <template v-if="error">
+    <template v-if="flowsError">
       <UAlert
         icon="i-heroicons-exclamation-triangle"
         color="error"
         variant="soft"
         title="Error loading flows"
-        :description="error"
+        :description="flowsError"
       />
     </template>
 
-    <UCard>
-      <template #header>
-        <div class="flex items-center justify-between">
-          <span class="font-medium">Flows</span>
-          <span v-if="loading" class="text-sm text-muted-foreground">Loading...</span>
-        </div>
+    <template v-if="capabilitiesError">
+      <UAlert
+        icon="i-heroicons-exclamation-triangle"
+        color="error"
+        variant="soft"
+        title="Error loading capabilities"
+        :description="capabilitiesError"
+      />
+    </template>
+
+    <UTabs :items="tabs" class="w-full">
+      <template #flows>
+        <UCard>
+          <template #header>
+            <div class="flex items-center justify-between">
+              <span class="font-medium">Flows</span>
+              <div class="flex items-center gap-2">
+                <span v-if="flowsLoading" class="text-sm text-muted-foreground">Loading...</span>
+                <UButton
+                  icon="i-heroicons-plus"
+                  size="xs"
+                  variant="ghost"
+                  label="Add Flow"
+                  @click="showCreateModal = true"
+                />
+              </div>
+            </div>
+          </template>
+
+          <div v-if="!flowsLoading && flows.length === 0" class="flex flex-col items-center justify-center py-12 text-center">
+            <UIcon name="i-heroicons-arrow-path" class="h-12 w-12 text-muted-foreground mb-4" />
+            <h3 class="text-lg font-medium">
+              No flows found
+            </h3>
+            <p class="text-muted-foreground mb-6">
+              Create your first flow for this product.
+            </p>
+            <UButton
+              label="Add Flow"
+              icon="i-heroicons-plus"
+              @click="showCreateModal = true"
+            />
+          </div>
+
+          <div v-else class="flex flex-col divide-y divide-gray-100 dark:divide-gray-800 max-h-[600px] overflow-y-auto overflow-x-hidden">
+            <div v-for="flow in flows" :key="flow.id" class="py-4 flex items-center justify-between hover:bg-gray-50 dark:hover:bg-gray-800/50 transition-colors px-4 cursor-pointer" @click="navigateTo(`/platforms/${platformId}/products/${productId}/flows/${flow.id}`)">
+              <div class="min-w-0 flex-1">
+                <div class="flex items-center gap-2">
+                  <NuxtLink :to="`/platforms/${platformId}/products/${productId}/flows/${flow.id}`" class="text-primary font-medium hover:underline truncate" @click.stop>
+                    {{ flow.name }}
+                  </NuxtLink>
+                  <UBadge color="neutral" variant="soft" size="sm">
+                    {{ flow.step_count || 0 }} steps
+                  </UBadge>
+                </div>
+                <p v-if="flow.description" class="text-sm text-muted-foreground truncate mt-1">
+                  {{ flow.description }}
+                </p>
+              </div>
+              <div class="flex items-center gap-4 ml-4">
+                <UIcon name="i-heroicons-chevron-right" class="h-5 w-5 text-muted-foreground" />
+              </div>
+            </div>
+          </div>
+        </UCard>
       </template>
 
-      <div v-if="!loading && flows.length === 0" class="flex flex-col items-center justify-center py-12 text-center">
-        <UIcon name="i-heroicons-arrow-path" class="h-12 w-12 text-muted-foreground mb-4" />
-        <h3 class="text-lg font-medium">
-          No flows found
-        </h3>
-        <p class="text-muted-foreground mb-6">
-          Create your first flow for this product.
-        </p>
-        <UButton
-          label="Add Flow"
-          icon="i-heroicons-plus"
-          @click="showCreateModal = true"
-        />
-      </div>
-
-      <div v-else class="flex flex-col divide-y divide-gray-100 dark:divide-gray-800">
-        <div v-for="flow in flows" :key="flow.id" class="py-4 flex items-center justify-between hover:bg-gray-50 dark:hover:bg-gray-800/50 transition-colors px-4 -mx-4 cursor-pointer" @click="navigateTo(`/platforms/${platformId}/products/${productId}/flows/${flow.id}`)">
-          <div class="min-w-0 flex-1">
-            <div class="flex items-center gap-2">
-              <NuxtLink :to="`/platforms/${platformId}/products/${productId}/flows/${flow.id}`" class="text-primary font-medium hover:underline truncate" @click.stop>
-                {{ flow.name }}
-              </NuxtLink>
-              <UBadge color="neutral" variant="soft" size="sm">
-                {{ flow.step_count || 0 }} steps
-              </UBadge>
+      <template #capabilities>
+        <UCard>
+          <template #header>
+            <div class="flex items-center justify-between">
+              <span class="font-medium">Capabilities</span>
+              <div class="flex items-center gap-2">
+                <span v-if="capabilitiesLoading" class="text-sm text-muted-foreground">Loading...</span>
+                <UButton
+                  icon="i-heroicons-plus"
+                  size="xs"
+                  variant="ghost"
+                  label="Add Capability"
+                  @click="showCreateCapabilityModal = true"
+                />
+              </div>
             </div>
-            <p v-if="flow.description" class="text-sm text-muted-foreground truncate mt-1">
-              {{ flow.description }}
+          </template>
+
+          <div v-if="!capabilitiesLoading && capabilities.length === 0" class="flex flex-col items-center justify-center py-12 text-center">
+            <UIcon name="i-heroicons-sparkles" class="h-12 w-12 text-muted-foreground mb-4" />
+            <h3 class="text-lg font-medium">
+              No capabilities found
+            </h3>
+            <p class="text-muted-foreground mb-6">
+              Define the product functions that this product supports.
             </p>
+            <UButton
+              label="Add Capability"
+              icon="i-heroicons-plus"
+              @click="showCreateCapabilityModal = true"
+            />
           </div>
-          <div class="flex items-center gap-4 ml-4">
-            <UIcon name="i-heroicons-chevron-right" class="h-5 w-5 text-muted-foreground" />
+
+          <div v-else class="flex flex-col divide-y divide-gray-100 dark:divide-gray-800 max-h-[600px] overflow-y-auto overflow-x-hidden">
+            <div v-for="cap in capabilities" :key="cap.id" class="py-4 flex items-center justify-between hover:bg-gray-50 dark:hover:bg-gray-800/50 transition-colors px-4 group">
+              <div class="min-w-0 flex-1">
+                <div class="flex items-center gap-2">
+                  <span class="text-primary font-medium truncate">
+                    {{ cap.name }}
+                  </span>
+                </div>
+                <p v-if="cap.description" class="text-sm text-muted-foreground truncate mt-1">
+                  {{ cap.description }}
+                </p>
+              </div>
+              <div class="flex items-center gap-2 ml-4">
+                <UButton
+                  icon="i-heroicons-pencil-square"
+                  color="neutral"
+                  variant="outline"
+                  size="xs"
+                  label="Edit"
+                  @click.stop="openEditCapability(cap)"
+                />
+                <UButton
+                  icon="i-heroicons-trash"
+                  color="error"
+                  variant="outline"
+                  size="xs"
+                  label="Delete"
+                  @click.stop="handleDeleteCapability(cap.id)"
+                />
+              </div>
+            </div>
           </div>
-        </div>
-      </div>
-    </UCard>
+        </UCard>
+      </template>
+    </UTabs>
 
     <UModal v-model:open="showCreateModal" title="Add Flow" description="Create a new flow for this product.">
       <template #body>
@@ -185,6 +363,45 @@ const breadcrumbs = computed(() => [
         <div class="flex justify-end gap-x-3">
           <UButton color="neutral" variant="ghost" label="Cancel" @click="showCreateModal = false" />
           <UButton color="primary" label="Create" :loading="isCreating" :disabled="!canCreate" @click="handleCreate" />
+        </div>
+      </template>
+    </UModal>
+    <UModal v-model:open="showCreateCapabilityModal" title="Add Capability" description="Define a new function this product supports.">
+      <template #body>
+        <div class="space-y-4 py-4">
+          <UFormField label="Name" required>
+            <UInput v-model="createCapabilityForm.name" placeholder="e.g. Account Registration" autofocus />
+          </UFormField>
+          <UFormField label="Description">
+            <UTextarea v-model="createCapabilityForm.description" placeholder="Optional description..." />
+          </UFormField>
+        </div>
+      </template>
+
+      <template #footer>
+        <div class="flex justify-end gap-x-3">
+          <UButton color="neutral" variant="ghost" label="Cancel" @click="showCreateCapabilityModal = false" />
+          <UButton color="primary" label="Create" :loading="isCreatingCapability" :disabled="!canCreateCapability" @click="handleCreateCapability" />
+        </div>
+      </template>
+    </UModal>
+
+    <UModal v-model:open="showEditCapabilityModal" title="Edit Capability" description="Update this product function.">
+      <template #body>
+        <div class="space-y-4 py-4">
+          <UFormField label="Name" required>
+            <UInput v-model="editCapabilityForm.name" placeholder="e.g. Account Registration" autofocus />
+          </UFormField>
+          <UFormField label="Description">
+            <UTextarea v-model="editCapabilityForm.description" placeholder="Optional description..." />
+          </UFormField>
+        </div>
+      </template>
+
+      <template #footer>
+        <div class="flex justify-end gap-x-3">
+          <UButton color="neutral" variant="ghost" label="Cancel" @click="showEditCapabilityModal = false" />
+          <UButton color="primary" label="Update Capability" :loading="isUpdatingCapability" :disabled="!canUpdateCapability" @click="handleUpdateCapability" />
         </div>
       </template>
     </UModal>
