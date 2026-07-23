@@ -20,8 +20,8 @@ export function useServices() {
   const loading = ref(false)
   const error = ref<string | null>(null)
 
-  async function fetchServices() {
-    if (services.value.length > 0) return
+  async function fetchServices(forceRefresh?: boolean) {
+    if (services.value.length > 0 && !forceRefresh) return
     loading.value = true
     error.value = null
     try {
@@ -71,17 +71,17 @@ export function useServices() {
 
   async function createService(payload: { name: string; type?: string; description?: string; url?: string }) {
     await apiFetch('/services', { method: 'POST', body: payload })
-    await fetchServices()
+    await fetchServices(true)
   }
 
   async function updateService(payload: ServiceDto) {
     await apiFetch(`/services/${payload.id}`, { method: 'PUT', body: payload })
-    await fetchServices()
+    await fetchServices(true)
   }
 
   async function deleteService(id: string) {
     await apiFetch(`/services/${id}`, { method: 'DELETE' })
-    await fetchServices()
+    await fetchServices(true)
   }
 
   async function fetchServiceTypes() {
